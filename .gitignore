@@ -158,13 +158,6 @@ gradle-app.setting
 .settings/
 bin/
 
-# IntelliJ
-*.iml
-*.ipr
-*.iws
-.idea/
-out/
-
 # Fleet
 .fleet
 
