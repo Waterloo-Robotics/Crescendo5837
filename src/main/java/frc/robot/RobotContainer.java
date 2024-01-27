@@ -1,73 +1,360 @@
-package frc.robot;
+// FRC2106 Junkyard Dogs - Continuity Base Code - www.team2106.org
 
-import edu.wpi.first.wpilibj.GenericHID;
+package frc.robot;
+import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.networktables.StringPublisher;
+import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
+import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
+import edu.wpi.first.wpilibj.motorcontrol.Spark;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.auto.commands.TrajectoryRunner;
+import frc.robot.auto.commands.TrajectoryWeaver;
+import frc.robot.auto.manuals.Forward2M;
+import frc.robot.auto.routines.one.ConeHigh;
+import frc.robot.auto.routines.one.ConeHighBump;
+import frc.robot.auto.routines.one.ConeHighCharge;
+import frc.robot.auto.routines.one.CubeHigh;
+import frc.robot.auto.routines.one.CubeHighBump;
+import frc.robot.auto.routines.one.CubeHighCharge;
+import frc.robot.auto.routines.two.ConeCubeHigh;
+import frc.robot.auto.routines.two.ConeCubeHighBump;
+import frc.robot.auto.routines.two.ConeCubeCube;
+import frc.robot.auto.routines.two.TwoPieceWithLessPaths;
+import frc.robot.auto.routines.two.BalanceOver;
+import frc.robot.auto.routines.util.AutoBalance;
+import frc.robot.auto.routines.util.AutoOne;
+import frc.robot.auto.routines.util.AutoThree;
+import frc.robot.auto.routines.util.AutoTwo;
+import frc.robot.auto.routines.util.TestRoutine;
+import frc.robot.commands.elevator.ElevatorApriltag;
+import frc.robot.commands.elevator.ElevatorDownSetpoint;
+import frc.robot.commands.elevator.ElevatorHome;
+import frc.robot.commands.elevator.ElevatorManual;
+import frc.robot.commands.elevator.ElevatorJoystick;
+import frc.robot.commands.elevator.ElevatorSolenoid;
+import frc.robot.commands.elevator.ElevatorStop;
+import frc.robot.commands.elevator.ElevatorUpSetpoint;
+import frc.robot.commands.elevator.ElevatorZero;
+import frc.robot.commands.grabber.intake.GrabberForward;
+import frc.robot.commands.grabber.intake.GrabberHold;
+import frc.robot.commands.grabber.intake.GrabberReverse;
+import frc.robot.commands.grabber.intake.GrabberReverseFast;
+import frc.robot.commands.grabber.intake.GrabberSolenoid;
+import frc.robot.commands.grabber.intake.GrabberStop;
+import frc.robot.commands.intake.IntakeForward;
+import frc.robot.commands.intake.IntakeHold;
+import frc.robot.commands.intake.IntakeReverse;
+import frc.robot.commands.intake.IntakeStop;
+import frc.robot.commands.led.SetLedGameObject;
+import frc.robot.commands.led.SetLedWhiteMode;
+import frc.robot.commands.led.deprecated.SetLedPurple;
+import frc.robot.commands.led.deprecated.SetLedRGB;
+import frc.robot.commands.led.deprecated.SetLedRainbow;
+import frc.robot.commands.led.deprecated.SetLedRed;
+import frc.robot.commands.led.deprecated.SetLedYellow;
+import frc.robot.commands.routines.loading.DEPConeFloor;
+import frc.robot.commands.routines.loading.LoadPlatform;
+import frc.robot.commands.routines.loading.LoadSlide;
+import frc.robot.commands.routines.loading.LoadSlideAlign;
+import frc.robot.commands.routines.scoring.ObjectLaunch;
+import frc.robot.commands.routines.scoring.ScoreBottom;
+import frc.robot.commands.routines.scoring.ScoreTop;
+import frc.robot.commands.grabber.angle.GrabberDegrees;
+import frc.robot.commands.grabber.angle.GrabberTrigger;
+import frc.robot.commands.swerve.SwerveAlignBasic;
+import frc.robot.commands.swerve.SwerveJoystick;
+import frc.robot.commands.swerve.SwerveMove;
+import frc.robot.commands.swerve.SwerveReset;
+import frc.robot.commands.swerve.SwerveRotate;
+import frc.robot.commands.swerve.SwerveAutoAlign;
+import frc.robot.commands.util.ResetOdometry;
+import frc.robot.subsystems.ElevatorSubsystem;
+import frc.robot.subsystems.GrabberSubsystem;
+import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.SwerveSubsystem;
+import frc.robot.subsystems.VisionSubsystem;
+import frc.robot.util.Constants;
+import frc.robot.util.Leds;
+import frc.robot.util.LightStrip;
+import frc.robot.util.Rumble;
+import frc.robot.util.Transmitter;
+import frc.robot.util.UltrasonicRangefinder;
+import frc.robot.util.VL53L4CX;
+import frc.robot.util.Constants.AutoConstants;
+import frc.robot.util.Constants.IOConstants;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
+import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 
-import frc.robot.autos.*;
-import frc.robot.commands.*;
-import frc.robot.subsystems.*;
+// Ignore unused variable warnings
+@SuppressWarnings("unused")
 
-/**
- * This class is where the bulk of the robot should be declared. Since Command-based is a
- * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
- * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
- * subsystems, commands, and button mappings) should be declared here.
- */
 public class RobotContainer {
-    /* Controllers */
-    private final Joystick driver = new Joystick(0);
 
-    /* Drive Controls */
-    private final int translationAxis = XboxController.Axis.kLeftY.value;
-    private final int strafeAxis = XboxController.Axis.kLeftX.value;
-    private final int rotationAxis = XboxController.Axis.kRightX.value;
+  // Converted to 2023 wpiblib
 
-    /* Driver Buttons */
-    private final JoystickButton zeroGyro = new JoystickButton(driver, XboxController.Button.kY.value);
-    private final JoystickButton robotCentric = new JoystickButton(driver, XboxController.Button.kLeftBumper.value);
+  //------------------------------------O-B-J-E-C-T-S-----------------------------------//
 
-    /* Subsystems */
-    private final Swerve s_Swerve = new Swerve();
+  // Deprecated joysticks
+  //private final Joystick leftJoystick = new Joystick(IOConstants.kLeftJoystick);
+  //private final Joystick rightJoystick = new Joystick(IOConstants.kRightJoystick);
 
+  // Create tx16s transmitter
+  private final Joystick tx16s = new Joystick(4);
+  private final CommandJoystick tx16sCOMD = new CommandJoystick(4);
 
-    /** The container for the robot. Contains subsystems, OI devices, and commands. */
-    public RobotContainer() {
-        s_Swerve.setDefaultCommand(
-            new TeleopSwerve(
-                s_Swerve, 
-                () -> -driver.getRawAxis(translationAxis), 
-                () -> -driver.getRawAxis(strafeAxis), 
-                () -> -driver.getRawAxis(rotationAxis), 
-                () -> robotCentric.getAsBoolean()
-            )
-        );
+  // Create led strips
+ // private final LightStrip strips = new LightStrip(tx16s,0);
 
-        // Configure the button bindings
-        configureButtonBindings();
-    }
+ private final Leds leds = new Leds();
 
-    /**
-     * Use this method to define your button->command mappings. Buttons can be created by
-     * instantiating a {@link GenericHID} or one of its subclasses ({@link
-     * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
-     * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
-     */
-    private void configureButtonBindings() {
-        /* Driver Buttons */
-        zeroGyro.onTrue(new InstantCommand(() -> s_Swerve.zeroHeading()));
-    }
+  // Create ultrasonic sensor 
+  //private final UltrasonicRangefinder ultrasonic = new UltrasonicRangefinder(strips);
 
-    /**
-     * Use this to pass the autonomous command to the main {@link Robot} class.
-     *
-     * @return the command to run in autonomous
-     */
-    public Command getAutonomousCommand() {
-        // An ExampleCommand will run in autonomous
-        return new exampleAuto(s_Swerve);
-    }
+  // Create swerve subsystem
+  private final SwerveSubsystem swerveSubsystem = new SwerveSubsystem();
+  
+  // Create vision subsystem
+  private final VisionSubsystem visionSubsystem = new VisionSubsystem();
+
+  // Create grabber subsystem
+  private final GrabberSubsystem grabberSubsystem = new GrabberSubsystem();
+
+  // Create elevator subsystem
+  private final ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
+
+  // Create PID controllers for trajectory tracking
+  public final PIDController xController = new PIDController(AutoConstants.kPXController, 0, 0);
+  public final PIDController yController = new PIDController(AutoConstants.kPYController, 0, 0);
+  //public final ProfiledPIDController thetaController = new ProfiledPIDController(AutoConstants.kPThetaController, AutoConstants.kIThetaController, AutoConstants.kDThetaController, AutoConstants.kThetaControllerConstraints);
+  public final ProfiledPIDController thetaController = new ProfiledPIDController(0, AutoConstants.kIThetaController, AutoConstants.kDThetaController, AutoConstants.kThetaControllerConstraints);
+
+  // Create a non profiled PID controller for path planner
+  private final PIDController ppThetaController = new PIDController(0, 0, 0);
+
+  // Create xbox controller
+  //private final XboxController xbox = new XboxController(3);
+  private final CommandXboxController xbox = new CommandXboxController(3);
+  private final XboxController xboxNC = new XboxController(3);
+  private final Rumble rumble = new Rumble(xboxNC, grabberSubsystem);
+  // private final VL53L4CX vl53l4cx = new VL53L4CX(20000);
+
+  //----------------------A-U-T-O---C-O-M-M-A-N-D-S----------------------------//
+
+  // Command chooser for auto
+  SendableChooser<Command> chooser = new SendableChooser<>();
+
+  // Only place game object and dont move
+  Command coneHigh = new ConeHigh(swerveSubsystem, elevatorSubsystem, grabberSubsystem, xController, yController, ppThetaController);
+  Command cubeHigh = new CubeHigh(swerveSubsystem, elevatorSubsystem, grabberSubsystem, xController, yController, ppThetaController);
+
+  // Place game object and go on charge station
+  Command coneHighCharge = new ConeHighCharge(swerveSubsystem, elevatorSubsystem, grabberSubsystem, xController, yController, ppThetaController, leds);
+  Command cubeHighCharge = new CubeHighCharge(swerveSubsystem, elevatorSubsystem, grabberSubsystem, xController, yController, ppThetaController, leds);
+
+  // Place game object and leave community on bump side
+  Command coneHighBump = new ConeHighBump(swerveSubsystem, elevatorSubsystem, grabberSubsystem, xController, yController, ppThetaController);
+  Command cubeHighBump = new CubeHighBump(swerveSubsystem, elevatorSubsystem, grabberSubsystem, xController, yController, ppThetaController);
+
+  Command REDConeCubeHigh = new ConeCubeHigh(swerveSubsystem, elevatorSubsystem, grabberSubsystem, xController, yController, ppThetaController, true);
+  Command BLUConeCubeHigh = new ConeCubeHigh(swerveSubsystem, elevatorSubsystem, grabberSubsystem, xController, yController, ppThetaController, false);
+
+  Command REDConeCubeHighBump = new ConeCubeHighBump(swerveSubsystem, elevatorSubsystem, grabberSubsystem, xController, yController, ppThetaController,true);
+
+  Command BLUConeCubeHighBump = new ConeCubeHighBump(swerveSubsystem, elevatorSubsystem, grabberSubsystem, xController, yController, ppThetaController, false);
+
+  Command ConeCubeCube = new ConeCubeCube(swerveSubsystem, elevatorSubsystem, grabberSubsystem, xController, yController, ppThetaController, false);
+
+  Command balanceOver = new BalanceOver(swerveSubsystem, elevatorSubsystem, grabberSubsystem, xController, yController, ppThetaController, leds);
+
+  Command balanceOnly = new AutoBalance(swerveSubsystem, leds);
+
+  //Command REDtwoPieceWithLessPaths = new TwoPieceWithLessPaths(swerveSubsystem, elevatorSubsystem, grabberSubsystem, xController, yController, ppThetaController, strips);
+  //------------------------------------C-O-N-S-T-R-U-C-T-O-R----------------------------//
+
+  public RobotContainer(){
+
+    //CameraServer.startAutomaticCapture();
+    //PathPlannerServer.startServer(5811);
+
+    chooser.addOption("RED ConeCubeHigh BUMP", REDConeCubeHighBump);
+    chooser.addOption("BLU ConeCubeHigh BUMP", BLUConeCubeHighBump);
+
+    chooser.addOption("RED Cone Cube High", REDConeCubeHigh);
+    chooser.addOption("BLU Cone Cube High", BLUConeCubeHigh);
+
+    chooser.addOption("Cone High CHARGE", coneHighCharge);
+    chooser.setDefaultOption("CUBE High CHARGE", cubeHighCharge);
+
+    chooser.addOption("Cone High", coneHigh);
+    chooser.addOption("CUBE High", cubeHigh);
+
+    chooser.addOption("Cone High Bump", coneHighBump);
+    chooser.addOption("CUBE High Bump", cubeHighBump);
+
+    chooser.addOption("Balance OVER", balanceOver);
+    chooser.addOption("Balance ONLY", balanceOnly);
+
+    chooser.addOption("Cone Cube Cube", ConeCubeCube);
+
+    SmartDashboard.putData(chooser);
+
+    // Set swerve subsystem default command to swerve joystick with respective joystick inputs
+  //>--------------O-L-D--T-R-A-N-S----------------//
+
+  // Joystick Numbers 0 = LEFT : 1 = RIGHT
+  // Joystick Axises: 0 = left/right : 1 = forward/backwards : 2 = dial
+  // OLD-> Transmitter Axises: 0 = roll : 1 = pitch : 2 = throttle : 3 = yaw : 4 = analog1 : 5 = analog2
+
+  /* 
+    swerveSubsystem.setDefaultCommand(new SwerveJoystick(swerveSubsystem,
+    () -> tx16s.getRawAxis(0), // X-Axis
+    () -> -tx16s.getRawAxis(1), // Y-Axis
+    () -> tx16s.getRawAxis(3), // R-Axis
+    () -> tx16s.getRawButton(0), // Field oriented -does nothing right now
+    () -> swerveSubsystem.getHeading(), // Navx heading
+    () -> tx16s.getRawButton(4))); // Flick offset button, should be toggle!
+  */
+
+ //>-----------T-X-1-6-S---------<//
+
+swerveSubsystem.setDefaultCommand(new SwerveJoystick(swerveSubsystem,
+() -> -tx16sCOMD.getRawAxis(0), // X-Axis
+() -> tx16sCOMD.getRawAxis(1), // Y-Axis
+() -> tx16sCOMD.getRawAxis(3), // R-Axis
+() -> tx16s.getRawButton(2), // Field oriented -does nothing right now
+() -> swerveSubsystem.getHeading(), // Navx heading
+() -> tx16s.getRawButton(4))); // Flick offset button, should be toggle!
+
+  //>----------S-E-N-D-E-R----------<//
+
+    // Run button binding method
+    configureButtonBindings();
+
+  //>---------D-E-F-A-U-L-T----------<//
+
+  /* elevatorSubsystem.setDefaultCommand(new ElevatorJoystick(elevatorSubsystem,
+  () -> xbox.getRawAxis(1))); */
+
+  /* grabberSubsystem.setDefaultCommand(new GrabberTrigger(grabberSubsystem,
+  () -> xbox.getRawAxis(3))); */
+
+  }
+
+  //------------------------------------D-E-B-U-G------------------------------------//
+
+  private double zeroFunct(){return 0;}
+
+  private boolean trueFunct(){return true;}
+
+  private boolean falseFunct(){return false;}
+
+  //------------------------------------B-U-T-T-O-N-S------------------------------------//
+
+  // Create button bindings
+  private void configureButtonBindings(){
+
+    // ELEVATOR SOLENOID
+    new JoystickButton(tx16s, 3).onTrue(new ElevatorSolenoid(elevatorSubsystem));
+
+    // 4 Y - Garbber Solenoid
+    xbox.y().onTrue(new GrabberSolenoid(grabberSubsystem));
+
+    // 1 A - Grabber Intake Forward
+    xbox.a().onTrue(new GrabberForward(grabberSubsystem));
+    xbox.a().toggleOnFalse(new GrabberHold(grabberSubsystem));
+
+    // 2 B - Grabber Intake Reverse
+    xbox.b().onTrue(new GrabberReverse(grabberSubsystem));
+    xbox.b().toggleOnFalse(new GrabberHold(grabberSubsystem));
+
+    // 3 X - Elevator Zero
+    xbox.x().onTrue(new ElevatorZero(elevatorSubsystem, grabberSubsystem));
+
+    // 5 LB - Low Score
+    xbox.leftBumper().onTrue(new ScoreBottom(elevatorSubsystem, grabberSubsystem));
+
+    // 6 RB - High Score
+    xbox.rightBumper().onTrue(new ScoreTop(elevatorSubsystem, grabberSubsystem));
+
+    // 9 LJ - Loading station
+   // xbox.button(9).onTrue(new LoadPlatform(elevatorSubsystem, grabberSubsystem));
+
+    // 10 RJ - GrabrveMove(swerveSubsystem,
+   // () -> swerveSubsystem.getHber angle zero
+    //xbox.button(10).onTrue(new Sweeading(), 1.0,1.0));
+
+   //xbox.button(10).onTrue(new AutoBalance(swerveSubsystem, strips));
+   xbox.button(10).onTrue(new LoadSlide(elevatorSubsystem, grabberSubsystem));
+
+    // 10 RJ - Reset Odometry
+   // xbox.button(10).onTrue(new ResetOdometry(swerveSubsystem, new Pose2d()));
+   // xbox.button(10).onTrue(new ResetOdometry(swerveSubsystem, new Pose2d()));
+
+    // Manual grabber angle test code
+   // xbox.axisGreaterThan(1, 0.55).onTrue(new GrabberTrigger(grabberSubsystem, () -> xbox.getRawAxis(1)));
+    
+    // D-PAD LED Color selection
+   // xbox.povUp().toggleOnTrue(new SetLedGameObject(leds, true));
+
+   // xbox.povDown().toggleOnTrue(new SetLedGameObject(leds, false));
+
+    //xbox.povLeft().toggleOnTrue(new SetLedWhiteMode(leds, "strobe"));
+    //xbox.povRight().toggleOnTrue(new SetLedRed(strips));
+
+    //tx16sCOMD.axisGreaterThan(1, 50.0).toggleOnTrue(new ElevatorZero(elevatorSubsystem, grabberSubsystem));
+
+    // Homing
+    //new JoystickButton(xbox, 1).onTrue(new ElevatorHome(elevatorSubsystem));
+    // Apriltag
+    // new JoystickButton(xbox, 2).onTrue(new ElevatorApriltag(elevatorSubsystem, visionSubsystem));
+    // Meters
+    // new JoystickButton(xbox, 3).onTrue(new ElevatorMeters(elevatorSubsystem, 1.0));
+
+    //--------------// Auto Bindings
+
+    // Auto align with side station
+   // new JoystickButton(tx16s, 8).onTrue(new LoadSlideAlign(swerveSubsystem, elevatorSubsystem, grabberSubsystem, leds, () -> -tx16sCOMD.getRawAxis(0), () -> tx16sCOMD.getRawAxis(1), () -> tx16s.getRawButton(8)));
+
+    // Apriltag
+    //new JoystickButton(tx16s, 8).onTrue(new SwerveAlignBasic(swerveSubsystem, visionSubsystem,
+    //   () -> swerveSubsystem.getHeading(), () -> tx16s.getRawButton(8), () -> tx16s.getRawAxis(5)));
+    
+    // Run autonmous command during teleop
+    //new JoystickButton(tx16s, 3).onTrue(new TrajectoryWeaver(swerveSubsystem,xController,yController,ppThetaController, pathOne, true));
+    //new JoystickButton(tx16s, 7).onTrue(new ElevatorManual(elevatorSubsystem, 0.5));
+    //new JoystickButton(tx16s, 7).onFalse(new ElevatorStop(elevatorSubsystem));
+  }
+
+  //------------------------------------R-E-F-E-R-R-E-R-S------------------------------------//
+
+    public void containerResetAllEncoders(){ swerveSubsystem.resetAllEncoders();}
+
+  //------------------------------------A-U-T-O-N-O-M-O-U-S------------------------------------//
+  
+  // Return the command to run during auto
+  public Command getAutonomousCommand(){
+
+  // PathPlannerTrajectory back = PathPlanner.loadPath("backwards0.5M", new PathConstraints(4, 2)); 
+    // Command to run
+      // Routine
+
+   // Command auto = swerveSubsystem.auto(back, true);
+
+    return chooser.getSelected();
+  }
 }
