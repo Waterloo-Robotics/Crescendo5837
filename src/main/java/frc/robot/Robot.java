@@ -4,11 +4,14 @@
 
 package frc.robot;
 
+import com.ctre.phoenix.led.CANdle;
+import com.ctre.phoenix6.hardware.CANcoder;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.PneumaticHub;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -17,8 +20,6 @@ import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkLowLevel;
 import com.revrobotics.CANSparkMax;
 
-
-
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
  * each mode, as described in the TimedRobot documentation. If you change the name of this class or
@@ -26,28 +27,6 @@ import com.revrobotics.CANSparkMax;
  * project.
  */
 public class Robot extends TimedRobot {
-    double tx = LimelightHelpers.getTX("");
-    double ty = LimelightHelpers.getTY("");
-    double area = LimelightHelpers.getTA("");
-    double tagID = LimelightHelpers.getFiducialID("");
-//  NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
-//  NetworkTableEntry tx = table.getEntry("tx");
-//  NetworkTableEntry ty = table.getEntry("ty");
-//  NetworkTableEntry ta = table.getEntry("ta");
-
-    //  double x = tx.getDouble(0.0);
-//  double y = ty.getDouble(0.0);
-//  double area = ta.getDouble(0.0);
-    private static final String kDefaultAuto = "Default";
-    private static final String kCustomAuto = "My Auto";
-    private String m_autoSelected;
-    private final SendableChooser<String> m_chooser = new SendableChooser<>();
-
-    static CANSparkMax test = new CANSparkMax(10, MotorType.kBrushless);
-    private static final String kDefaultAuto = "Default";
-    private static final String kCustomAuto = "My Auto";
-    private String m_autoSelected;
-    private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
     // PDH
 
@@ -88,17 +67,22 @@ public class Robot extends TimedRobot {
     CANdle led2 = new CANdle(46);
 
     // 2 limelights
+//    double tx = LimelightHelpers.getTX("");
+//    double ty = LimelightHelpers.getTY("");
+//    double area = LimelightHelpers.getTA("");
+//    double tagID = LimelightHelpers.getFiducialID("");
+//    NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
+//    NetworkTableEntry tx = table.getEntry("tx");
+//    NetworkTableEntry ty = table.getEntry("ty");
+//    NetworkTableEntry ta = table.getEntry("ta");
 
-    /**
-     * This function is run when the robot is first started up and should be used for any
-     * initialization code.
-     */
-    @Override
-    public void robotInit() {
-        m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
-        m_chooser.addOption("My Auto", kCustomAuto);
-        SmartDashboard.putData("Auto choices", m_chooser);
-    }
+    //    double x = tx.getDouble(0.0);
+//    double y = ty.getDouble(0.0);
+//    double area = ta.getDouble(0.0);
+    private static final String kDefaultAuto = "Default";
+    private static final String kCustomAuto = "My Auto";
+    private String m_autoSelected;
+    private final SendableChooser<String> m_chooser = new SendableChooser<>();
     /**
      * This function is run when the robot is first started up and should be used for any
      * initialization code.
@@ -120,19 +104,19 @@ public class Robot extends TimedRobot {
     @Override
     public void robotPeriodic() {
 
-//    x = tx.getDouble(0.0);
-//    y = ty.getDouble(0.0);
-//    area = ta.getDouble(0.0);
-        tx = LimelightHelpers.getTX("");
-        ty = LimelightHelpers.getTY("");
-        area = LimelightHelpers.getTA("");
-        tagID = LimelightHelpers.getFiducialID("");
+//        x = tx.getDouble(0.0);
+//        y = ty.getDouble(0.0);
+//        area = ta.getDouble(0.0);
+//        tx = LimelightHelpers.getTX("");
+//        ty = LimelightHelpers.getTY("");
+//        area = LimelightHelpers.getTA("");
+//        tagID = LimelightHelpers.getFiducialID("");
 
 
-        SmartDashboard.putNumber("LimelightTX", tx);
-        SmartDashboard.putNumber("LimelightTY", ty);
-        SmartDashboard.putNumber("LimelightArea", area);
-        SmartDashboard.putNumber("LimelightTagID", tagID);
+//        SmartDashboard.putNumber("LimelightTX", tx);
+//        SmartDashboard.putNumber("LimelightTY", ty);
+//        SmartDashboard.putNumber("LimelightArea", area);
+//        SmartDashboard.putNumber("LimelightTagID", tagID);
 
     }
 
