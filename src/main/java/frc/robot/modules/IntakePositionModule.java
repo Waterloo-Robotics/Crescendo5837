@@ -1,16 +1,17 @@
 package frc.robot.modules;
 
-public class NoteTransferModule {
+public class IntakePositionModule {
 
     public enum ModuleStates {
-        EMPTY,
-        LOADED,
-        SHOOT;
+        UNKNOWN,
+        HOME,
+        DEPLOYED,
+        TRANSFERRING;
     }
 
     public enum RequestStates {
-        LOAD,
-        SHOOT;
+        HOME,
+        DEPLOYED
     }
 
     public enum RequestStatusEnum {
@@ -23,7 +24,7 @@ public class NoteTransferModule {
     public ModuleStates lastState;
     public RequestStatusEnum requestStatus;
 
-    public final ModuleStates initalState = ModuleStates.EMPTY;
+    public final ModuleStates initialState = ModuleStates.UNKNOWN;
 
     public void request_state(RequestStates state) {
         this.requestedState = state;

@@ -1,6 +1,6 @@
 package frc.robot.modules;
 
-public class ClimberModule extends StatesModule {
+public class ClimberModule {
 
     public enum ModuleStates {
         NOT_HOMED,
@@ -27,6 +27,23 @@ public class ClimberModule extends StatesModule {
         FAILED;
     }
 
+    public ModuleStates currentState;
+    public RequestStates requestedState;
+    public ModuleStates lastState;
+    public RequestStatusEnum requestStatus;
+
     public final ModuleStates initalState = ModuleStates.NOT_HOMED;
-    
+
+    public void request_state(RequestStates state) {
+        this.requestedState = state;
+    }
+
+    public RequestStatusEnum get_request_status() {
+        return this.requestStatus;
+    }
+
+    public ModuleStates get_state() {
+        return this.currentState;
+    }
+
 }

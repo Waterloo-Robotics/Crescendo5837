@@ -1,21 +1,27 @@
 package frc.robot.modules;
 
-public class NoteTransferModule {
+import com.revrobotics.CANSparkMax;
+
+public class IntakeRollersModule {
 
     public enum ModuleStates {
-        EMPTY,
-        LOADED,
-        SHOOT;
+        STOPPED,
+        WAITING_FOR_NOTE,
+        POSITIONING_NOTE,
+        NOTE_IN_POSITION,
+        TRANSFER_NOTE;
     }
 
     public enum RequestStates {
-        LOAD,
-        SHOOT;
+        STOP,
+        NOTE_IN_POSITION,
+        TRANSFER_NOTE;
     }
 
     public enum RequestStatusEnum {
+        COMPLETE,
         IN_PROGRESS,
-        COMPLETE;
+        FAILED;
     }
 
     public ModuleStates currentState;
@@ -23,7 +29,13 @@ public class NoteTransferModule {
     public ModuleStates lastState;
     public RequestStatusEnum requestStatus;
 
-    public final ModuleStates initalState = ModuleStates.EMPTY;
+    public final static ModuleStates initialState = ModuleStates.STOPPED;
+
+    private CANSparkMax intakeRollerMotor;
+
+    public IntakeRollersModule(CANSparkMax motorController) {
+        this.intakeRollerMotor = motorController;
+    }
 
     public void request_state(RequestStates state) {
         this.requestedState = state;
