@@ -1,29 +1,24 @@
 package frc.robot.modules;
 
-public class IntakeModule {
+public class IntakeModule extends StatesModule{
 
     public enum ModuleStates {
         PICKUP,
         POSITION_NOTE,
         LOADED,
         TRANSFER,
-        EMPTY
+        EMPTY;
     }
 
     public enum RequestStates {
         PICKUP,
-        TRANSFER
+        TRANSFER;
     }
 
     public enum RequestStatusEnum {
         IN_PROGRESS,
-        COMPLETE
+        COMPLETE;
     }
-
-    public ModuleStates currentState;
-    public RequestStates requestedState;
-    public ModuleStates lastState;
-    public RequestStatusEnum requestStatus;
 
     public final ModuleStates initialState = ModuleStates.EMPTY;
 

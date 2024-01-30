@@ -1,28 +1,23 @@
 package frc.robot.modules;
 
-public class NoteTransferModule {
+public class NoteTransferModule extends StatesModule {
 
-    public enum moduleStates {
+    public enum ModuleStates {
         EMPTY,
         LOADED,
         SHOOT;
     }
 
-    public enum requestStates {
+    public enum RequestStates {
         LOAD,
         SHOOT;
     }
 
-    public enum requestStatusEnum {
+    public enum RequestStatusEnum {
         IN_PROGRESS,
         COMPLETE;
     }
 
-    public moduleStates currenState;
-    public requestStates requestState;
-    public moduleStates lastState;
-    public requestStatusEnum requestStatus;
-
-    public final moduleStates initalState = moduleStates.EMPTY;
+    public final ModuleStates initalState = ModuleStates.EMPTY;
 
 }

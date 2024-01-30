@@ -1,6 +1,6 @@
 package frc.robot.modules;
 
-public class DrivebaseModule {
+public class DrivebaseModule extends StatesModule{
 
     public enum ModuleStates {
 
@@ -12,14 +12,8 @@ public class DrivebaseModule {
 
     public enum RequestStatusEnum {
         IN_PROGRESS,
-        COMPLETE
+        COMPLETE;
     }
 
-    public ModuleStates currentState;
-    public RequestStates requestedState;
-    public ModuleStates lastState;
-    public RequestStatusEnum requestStatus;
-
     public final ModuleStates initialState = null;
-
 }

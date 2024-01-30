@@ -1,30 +1,26 @@
 package frc.robot.modules;
 
-public class FlywheelSubmodule {
+public class FlywheelSubmodule extends StatesModule {
 
-    public enum moduleStates {
+    public enum ModuleStates {
         STOPPED,
         SPIN_UP,
         AT_SPEED,
-        SPIN_DOWN;
-
+        SPIN_DOWN,
+        SATURATED_SPEED_NOT_MET;
     }
 
-    public enum requestStates {
+    public enum RequestStates {
         STOP,
         SPIN_UP;
     }
 
-    public enum requestStatusEnum {
+    public enum RequestStatusEnum {
         IN_PROGRESS,
-        COMPLETE;
+        COMPLETE,
+        INCOMPLETE;
     }
 
-    public moduleStates currenState;
-    public requestStates requestState;
-    public moduleStates lastState;
-    public requestStatusEnum requestStatus;
-
-    public final moduleStates initalState = moduleStates.STOPPED;
+    public final ModuleStates initalState = ModuleStates.STOPPED;
 
 }

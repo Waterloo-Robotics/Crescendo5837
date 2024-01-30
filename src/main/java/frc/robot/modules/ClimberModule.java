@@ -1,8 +1,8 @@
 package frc.robot.modules;
 
-public class ClimberModule {
+public class ClimberModule extends StatesModule {
 
-    public enum moduleStates {
+    public enum ModuleStates {
         NOT_HOMED,
         LEARN_IN_PROGRESS,
         LEARN_COMPLETE,
@@ -13,7 +13,7 @@ public class ClimberModule {
         CLIMB;
     }
 
-    public enum requestStates {
+    public enum RequestStates {
         LEARN,
         HOME,
         DEPLOY,
@@ -21,16 +21,12 @@ public class ClimberModule {
         CLIMB;
     }
 
-    public enum requestStatusEnum {
+    public enum RequestStatusEnum {
         IN_PROGRESS,
-        COMPLETE;
+        COMPLETE,
+        FAILED;
     }
 
-    public moduleStates currenState;
-    public requestStates requestState;
-    public moduleStates lastState;
-    public requestStatusEnum requestStatus;
-
-    public final moduleStates initalState = moduleStates.NOT_HOMED;
+    public final ModuleStates initalState = ModuleStates.NOT_HOMED;
     
 }
