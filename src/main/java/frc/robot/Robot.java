@@ -12,6 +12,7 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.PneumaticHub;
+import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -29,56 +30,11 @@ import com.revrobotics.CANSparkMax;
 public class Robot extends TimedRobot {
 
     // PDH
+    PowerDistribution pdh = new PowerDistribution();
 
     /* Drive System */
-    static CANSparkMax frontLeftSteerNeo = new CANSparkMax(2, MotorType.kBrushless);
-    static CANSparkMax frontLeftDriveNeo = new CANSparkMax(3, MotorType.kBrushless);
-    static CANcoder frontLeftSteerEncoder = new CANcoder(4);
+    static CANSparkMax neo = new CANSparkMax(2, MotorType.kBrushless);
 
-    static CANSparkMax frontRightSteerNeo = new CANSparkMax(5, MotorType.kBrushless);
-    static CANSparkMax frontRightDriveNeo = new CANSparkMax(6, MotorType.kBrushless);
-    static CANcoder frontRightSteerEncoder = new CANcoder(7);
-
-    static CANSparkMax rearLeftSteerNeo = new CANSparkMax(8, MotorType.kBrushless);
-    static CANSparkMax rearLeftDriveNeo = new CANSparkMax(9, MotorType.kBrushless);
-    static CANcoder rearLeftSteerEncoder = new CANcoder(10);
-
-    static CANSparkMax rearRightSteerNeo = new CANSparkMax(11, MotorType.kBrushless);
-    static CANSparkMax rearRightDriveNeo = new CANSparkMax(12, MotorType.kBrushless);
-    static CANcoder rearRightSteerEncoder = new CANcoder(13);
-
-
-    /* Shooter */
-    static CANSparkMax shooterAngleNeo550 = new CANSparkMax(25, MotorType.kBrushless);
-    // shooter angle abs encoder
-    static CANSparkMax rightFlywheelNeo = new CANSparkMax(20, MotorType.kBrushless);
-    static CANSparkMax leftFlywheelNeo = new CANSparkMax(21, MotorType.kBrushless);
-
-    /* Climber */
-    static CANSparkMax rightClimberNeo = new CANSparkMax(22, MotorType.kBrushless);
-    static CANSparkMax leftClimberNeo = new CANSparkMax(23, MotorType.kBrushless);
-
-    /* Intake */
-    static CANSparkMax intakeNeo550 = new CANSparkMax(24, MotorType.kBrushless);
-
-    PneumaticHub pneumaticHub = new PneumaticHub(40);
-
-    CANdle led1 = new CANdle(45);
-    CANdle led2 = new CANdle(46);
-
-    // 2 limelights
-//    double tx = LimelightHelpers.getTX("");
-//    double ty = LimelightHelpers.getTY("");
-//    double area = LimelightHelpers.getTA("");
-//    double tagID = LimelightHelpers.getFiducialID("");
-//    NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
-//    NetworkTableEntry tx = table.getEntry("tx");
-//    NetworkTableEntry ty = table.getEntry("ty");
-//    NetworkTableEntry ta = table.getEntry("ta");
-
-    //    double x = tx.getDouble(0.0);
-//    double y = ty.getDouble(0.0);
-//    double area = ta.getDouble(0.0);
     private static final String kDefaultAuto = "Default";
     private static final String kCustomAuto = "My Auto";
     private String m_autoSelected;
@@ -104,19 +60,9 @@ public class Robot extends TimedRobot {
     @Override
     public void robotPeriodic() {
 
-//        x = tx.getDouble(0.0);
-//        y = ty.getDouble(0.0);
-//        area = ta.getDouble(0.0);
-//        tx = LimelightHelpers.getTX("");
-//        ty = LimelightHelpers.getTY("");
-//        area = LimelightHelpers.getTA("");
-//        tagID = LimelightHelpers.getFiducialID("");
 
-
-//        SmartDashboard.putNumber("LimelightTX", tx);
-//        SmartDashboard.putNumber("LimelightTY", ty);
-//        SmartDashboard.putNumber("LimelightArea", area);
-//        SmartDashboard.putNumber("LimelightTagID", tagID);
+        SmartDashboard.putNumber("Spark Max current from PD", pdh.getCurrent(7));
+        SmartDashboard.putNumber("NEO current from Spark Max", neo.getOutputCurrent());
 
     }
 
