@@ -17,6 +17,7 @@ public class SwerveEncoder {
     public SwerveEncoder(int id, double offset, boolean inverted) {
         encoder = new CANcoder(id);
         this.offset = offset;
+        this.inverted = inverted;
     }
 
     /** Converts the encoder output to -180 to 180 */
