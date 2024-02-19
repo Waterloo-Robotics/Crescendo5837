@@ -1,124 +1,63 @@
-/*----------------------------------------------------------------------------*/
-/* Copyright (c) 2017-2018 FIRST. All Rights Reserved.                        */
-/* Open Source Software - may be modified and shared by FRC teams. The code   */
-/* must be accompanied by the FIRST BSD license file in the root directory of */
-/* the project.                                                               */
-/*----------------------------------------------------------------------------*/
+// Copyright (c) FIRST and other WPILib contributors.
+// Open Source Software; you can modify and/or share it under the terms of
+// the WPILib BSD license file in the root directory of this project.
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj.XboxController;
+import frc.robot.Constants.InputConstants;
+import frc.robot.subsystems.Swerve;
+import frc.robot.subsystems.Swerve.DriveState;
 
 public class Robot extends TimedRobot {
-    public static CTREConfigs ctreConfigs; // This needs to be fixed.
-    private Command autonomousCommand;
-    private RobotContainer robotContainer;
+  private Swerve swerve;
+  private XboxController driveController;
 
-    @Override
-    public void robotInit() {
-        ctreConfigs = new CTREConfigs();
-        robotContainer = new RobotContainer();
+  @Override
+  public void robotInit() {
+    driveController = new XboxController(InputConstants.kDriverControllerID);
+    swerve = new Swerve(driveController);
+  }
 
-        System.out.println("Robot Start up at: " + Timer.getFPGATimestamp());
-        StatusManager statusManager = StatusManager.getInstance();
-        addPeriodic(statusManager, .2, .01);
-    }
+  @Override
+  public void robotPeriodic() {}
 
-    @Override
-    public void robotPeriodic() {
-        // Runs the Scheduler.  This is responsible for polling buttons, adding newly-scheduled
-        // commands, running already-scheduled commands, removing finished or interrupted commands,
-        // and running subsystem periodic() methods.  This must be called from the robot's periodic
-        // block in order for anything in the Command-based framework to work.
-        CommandScheduler.getInstance().run();
-    }
+  @Override
+  public void autonomousInit() {}
 
-    /* ***** --- Autonomous --- ***** */
+  @Override
+  public void autonomousPeriodic() {
+    swerve.update();
+  }
 
-    // Called at the start of autonomous.
-    @Override
-    public void autonomousInit() {
-        autonomousCommand = robotContainer.getAutonomousCommand();
+  @Override
+  public void teleopInit() {
+    swerve.setWantedState(DriveState.TELEOP);
+  }
 
-        // schedule autonomous commands
-        if (autonomousCommand != null) {
-            autonomousCommand.schedule();
-        }
-    }
+  @Override
+  public void teleopPeriodic() {
+    swerve.update();
+  }
 
-    // Called periodically during autonomous
-    @Override
-    public void autonomousPeriodic() {}
+  @Override
+  public void disabledInit() {
+    swerve.stop();
+  }
 
-    // Called at the end of autonomous
-    @Override
-    public void autonomousExit() {
-        // Cancel autonomous commands
-        if (autonomousCommand != null) {
-            autonomousCommand.cancel();
-        }
-    }
+  @Override
+  public void disabledPeriodic() {}
 
-    /* ***** --- Teleop --- ***** */
+  @Override
+  public void testInit() {}
 
-    // Called at the start of teleop
-    @Override
-    public void teleopInit() {
-        System.out.println("TeleopInit");
-    }
+  @Override
+  public void testPeriodic() {}
 
-    // Called periodicly durring teleop
-    @Override
-    public void teleopPeriodic() {}
+  @Override
+  public void simulationInit() {}
 
-    // Called at the end of teleop.
-    @Override
-    public void teleopExit() {}
-
-    /* ***** --- Test Mode --- ***** */
-
-    // Called at the start of test mode
-    @Override
-    public void testInit() {
-        // Cancels all running commands at the start of test mode.
-        CommandScheduler.getInstance().cancelAll();
-    }
-
-    // Called periodicly durring test mode
-    @Override
-    public void testPeriodic() {}
-
-    // Called at the end of test mode
-    @Override
-    public void testExit() {}
-
-    /* ***** --- Disabled --- ***** */
-
-    // Called when disabled
-    @Override
-    public void disabledInit() {}
-
-    // Called periodicly when disabled
-    @Override
-    public void disabledPeriodic() {}
-
-    // Called when the robot exits disabled mode
-    @Override
-    public void disabledExit() {}
-
-    /* ***** --- Simulation --- ***** */
-
-    // Called when the robot enters simulation
-    @Override
-    public void simulationInit() {
-        DriverStation.silenceJoystickConnectionWarning(true);
-    }
-
-    // Called periodicly durring simulation
-    @Override
-    public void simulationPeriodic() {}
+  @Override
+  public void simulationPeriodic() {}
 }
