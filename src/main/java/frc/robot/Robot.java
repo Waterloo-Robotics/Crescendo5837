@@ -38,6 +38,9 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopPeriodic() {
+    if (driveController.getAButton()) swerve.setWantedState(DriveState.LOCK);
+    if (driveController.getBButton()) swerve.setWantedState(DriveState.TELEOP);
+
     swerve.update();
   }
 

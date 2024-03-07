@@ -10,6 +10,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.SwerveConstants;
 import frc.robot.Constants.SwerveModuleConstants.*;
 import frc.robot.lib.swerve.SwerveGyro;
@@ -92,6 +93,8 @@ public class Swerve {
     public void setModuleStates(SwerveModuleState[] states) {
         for(int i = 0; i < 4; i++) {
             modules[i].setModuleState(states[i]);
+            SmartDashboard.putNumber("Drive" + String.valueOf(i), modules[i].driveMotor.get());
+            SmartDashboard.putNumber("Angle" + String.valueOf(i), modules[i].angleMotor.get());
         }
     }
 
