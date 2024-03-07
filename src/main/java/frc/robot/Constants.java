@@ -13,7 +13,8 @@ public class Constants {
     public static class SwerveModuleConstants {
         public static final double kWheelDiameter = Units.inchesToMeters(4.0);
         public static final double kWheelCircumference = kWheelDiameter * Math.PI;
-        public static final double kDriveRatio = 6.75 / 1.0;
+        public static final double kDriveRatio = 6.12 / 1.0;
+//        public static final double kDriveRatio = 6.75 / 1.0;
         public static final double kDistancePerMotorRotation = kWheelCircumference / kDriveRatio;
 
         public static final double kDriveP = .02;
@@ -71,17 +72,17 @@ public class Constants {
     }
 
     public static class SwerveConstants {
-        public static final double kWheelOffset = Units.inchesToMeters(10.25);
+        public static final double kWheelOffset = Units.inchesToMeters(10.375);
         public static final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(new Translation2d[] {
             new Translation2d(kWheelOffset, kWheelOffset),
             new Translation2d(-kWheelOffset, kWheelOffset),
             new Translation2d(kWheelOffset, -kWheelOffset),
             new Translation2d(-kWheelOffset, -kWheelOffset)
         });
-        public static final double kModuleRadius = Units.inchesToMeters(14.5);
+        public static final double kModuleRadius = Units.inchesToMeters(14.6725);
 
         public static final double kDeadband = .1;
-        public static final double kMaxVelocity = Units.feetToMeters(15.1);
+        public static final double kMaxVelocity = Units.feetToMeters(16.6);
         public static final double kMaxAngularVelocity = 4;
 
         public static final boolean fieldCentric = true;
