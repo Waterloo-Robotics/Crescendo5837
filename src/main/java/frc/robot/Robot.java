@@ -12,6 +12,7 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.PneumaticHub;
+import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -33,6 +34,7 @@ import com.revrobotics.CANSparkMax;
 public class Robot extends TimedRobot {
 
     // PDH
+    PowerDistribution pdh = new PowerDistribution();
 
     /* Drive System */
     static CANSparkMax frontLeftSteerNeo = new CANSparkMax(2, MotorType.kBrushless);
