@@ -26,9 +26,9 @@ public class SwerveBaseModule {
 
     public SwerveDriveOdometry odometry;
 
-    DriveBaseStates current_state;
+    public DriveBaseStates current_state;
 
-    XboxController input_controller;
+    private XboxController input_controller;
 
     public SwerveBaseModule(XboxController drive_controller) {
         /* Create the four swerve modules passing in each corner's CAN ID */
@@ -49,7 +49,9 @@ public class SwerveBaseModule {
         positions[2] = modules[2].get_module_position();
         positions[3] = modules[3].get_module_position();
 
-        this.odometry = new SwerveDriveOdometry(kinematics, null, positions);
+        input_controller = drive_controller;
+
+        // this.odometry = new SwerveDriveOdometry(kinematics, null, positions);
     }
 
     private void drive_xbox() {
@@ -90,6 +92,13 @@ public class SwerveBaseModule {
         setModuleStates(states);
     }
 
+    public void stop() {
+        for (int i = 0; i < 4; i++) {
+            modules[i].steer_spark.set(0);
+            modules[i].drive_spark.set(0);
+        }
+    }
+
     private void test_steer() {
         /* The goal of this function is to set every swerve module to the same angle */
         /* Get the inputs from the controller */
@@ -100,7 +109,7 @@ public class SwerveBaseModule {
         x = MathUtil.applyDeadband(x, 0.1);
         y = MathUtil.applyDeadband(y, 0.1);
 
-        double angle = Math.atan2(y, x);
+        double angle = Math.atan2(y, x) * (180  / Math.PI);
 
         SwerveModuleState[] states = {
                 new SwerveModuleState(0, Rotation2d.fromDegrees(angle)),
@@ -109,7 +118,6 @@ public class SwerveBaseModule {
                 new SwerveModuleState(0, Rotation2d.fromDegrees(angle))
         };
         setModuleStates(states);
-
     }
 
     public void update() {
@@ -119,6 +127,9 @@ public class SwerveBaseModule {
                 break;
             case LOCK:
                 lock();
+                break;
+            case STOP:
+                stop();
                 break;
             case TEST_STEER:
                 test_steer();
@@ -138,6 +149,7 @@ public class SwerveBaseModule {
     public enum DriveBaseStates {
         XBOX,
         LOCK,
+        STOP,
         TEST_STEER
     }
 }
