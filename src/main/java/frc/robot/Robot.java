@@ -4,11 +4,15 @@
 
 package frc.robot;
 
+import java.lang.constant.DirectMethodHandleDesc;
+
 import com.ctre.phoenix.led.CANdle;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -93,6 +97,8 @@ public class Robot extends TimedRobot {
     private String m_autoSelected;
     private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
+    double angle;
+
     /**
      * This function is run when the robot is first started up and should be used
      * for any
@@ -104,7 +110,7 @@ public class Robot extends TimedRobot {
         m_chooser.addOption("My Auto", kCustomAuto);
         SmartDashboard.putData("Auto choices", m_chooser);
 
-        drivebase.current_state = DriveBaseStates.TEST_STEER;
+        drivebase.current_state = DriveBaseStates.XBOX;
     }
 
     /**
@@ -132,10 +138,10 @@ public class Robot extends TimedRobot {
         // SmartDashboard.putNumber("LimelightTY", ty);
         // SmartDashboard.putNumber("LimelightArea", area);
         // SmartDashboard.putNumber("LimelightTagID", tagID);
-        SmartDashboard.putNumber("0 Angle", drivebase.modules[0].get_raw_angle());
-        SmartDashboard.putNumber("1 Angle", drivebase.modules[1].get_raw_angle());
-        SmartDashboard.putNumber("2 Angle", drivebase.modules[2].get_raw_angle());
-        SmartDashboard.putNumber("3 Angle", drivebase.modules[3].get_raw_angle());
+        SmartDashboard.putNumber("0 Power", drivebase.modules[0].drive_spark.getAppliedOutput());
+        SmartDashboard.putNumber("1 Power", drivebase.modules[1].drive_spark.getAppliedOutput());
+        SmartDashboard.putNumber("2 Power", drivebase.modules[2].drive_spark.getAppliedOutput());
+        SmartDashboard.putNumber("3 Power", drivebase.modules[3].drive_spark.getAppliedOutput());
 
         /* The goal of this function is to set every swerve module to the same angle */
         /* Get the inputs from the controller */
@@ -146,9 +152,10 @@ public class Robot extends TimedRobot {
         x = MathUtil.applyDeadband(x, 0.1);
         y = MathUtil.applyDeadband(y, 0.1);
 
-        double angle = Math.atan2(y, x) * (180  / Math.PI);
+        angle = Math.atan2(y, x) * (180  / Math.PI);
 
         SmartDashboard.putNumber("Desired Angle", angle);
+        SmartDashboard.putNumber("Data", drivebase.modules[0].angle_controller.getPositionError());
     }
 
     /**
@@ -222,6 +229,7 @@ public class Robot extends TimedRobot {
         if (xbox_controller.getAButton())
         {
             drivebase.update();
+            // drivebase.modules[0].set_module_state(new SwerveModuleState(0, Rotation2d.fromDegrees(angle)));
         }
         else {
             drivebase.stop();

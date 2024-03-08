@@ -66,8 +66,8 @@ public class SwerveBaseModule {
         rotation = MathUtil.applyDeadband(rotation, 0.1);
 
         /* Multiply each by max velocity to get desired velocity in each direction */
-        double x_velocity_m_s = x * Units.feetToMeters(16);
-        double y_velocity_m_s = y * Units.feetToMeters(16);
+        double x_velocity_m_s = x * Units.feetToMeters(5);
+        double y_velocity_m_s = y * Units.feetToMeters(5);
         double rotational_vel = rotation * 4;
 
         /*
@@ -88,6 +88,16 @@ public class SwerveBaseModule {
                 new SwerveModuleState(0, Rotation2d.fromDegrees(45)),
                 new SwerveModuleState(0, Rotation2d.fromDegrees(45)),
                 new SwerveModuleState(0, Rotation2d.fromDegrees(-45))
+        };
+        setModuleStates(states);
+    }
+
+    private void straight() {
+        SwerveModuleState[] states = {
+                new SwerveModuleState(0, Rotation2d.fromDegrees(0)),
+                new SwerveModuleState(0, Rotation2d.fromDegrees(0)),
+                new SwerveModuleState(0, Rotation2d.fromDegrees(0)),
+                new SwerveModuleState(0, Rotation2d.fromDegrees(0))
         };
         setModuleStates(states);
     }
@@ -128,6 +138,9 @@ public class SwerveBaseModule {
             case LOCK:
                 lock();
                 break;
+            case STRAIGHT:
+                straight();
+                break;
             case STOP:
                 stop();
                 break;
@@ -149,6 +162,7 @@ public class SwerveBaseModule {
     public enum DriveBaseStates {
         XBOX,
         LOCK,
+        STRAIGHT,
         STOP,
         TEST_STEER
     }
