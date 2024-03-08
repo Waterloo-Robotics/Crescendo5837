@@ -15,8 +15,8 @@ public class SwerveModule {
     private PIDController driveController;
     private RelativeEncoder driveEncoder;
     public CANSparkMax angleMotor;
-    private PIDController angleController;
-    private SwerveEncoder angleEncoder;
+    public PIDController angleController;
+    public SwerveEncoder angleEncoder;
     private Rotation2d lastAngle;
 
     public SwerveModule(int driveID, boolean driveInverted, int angleID, boolean angleInverted, int encoderID, boolean encoderInverted, double offset) {
@@ -29,6 +29,8 @@ public class SwerveModule {
         this.angleMotor = new CANSparkMax(angleID, MotorType.kBrushless);
         angleMotor.setInverted(angleInverted);
         this.angleController = new PIDController(SwerveModuleConstants.kDriveP, SwerveModuleConstants.kDriveI, SwerveModuleConstants.kDriveD);
+        this.angleController.enableContinuousInput(-180, 180);
+        this.angleController.setTolerance(6);
         this.angleEncoder = new SwerveEncoder(encoderID, offset, encoderInverted);
         this.lastAngle = angleEncoder.getRotation2d();
     }

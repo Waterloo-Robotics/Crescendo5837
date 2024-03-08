@@ -17,7 +17,7 @@ import frc.robot.lib.swerve.SwerveGyro;
 import frc.robot.lib.swerve.SwerveModule;
 
 public class Swerve {
-    private SwerveModule[] modules;
+    public SwerveModule[] modules;
     private SwerveGyro gyro;
     private XboxController driveController;
     private DriveState wantedState, currentState;
@@ -69,6 +69,10 @@ public class Swerve {
         if(SwerveConstants.fieldCentric) {
             speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, gyro.getRotation2d());
         }
+
+        SmartDashboard.putNumber("x", speeds.vxMetersPerSecond);
+        SmartDashboard.putNumber("y", speeds.vyMetersPerSecond);
+
 
         SwerveModuleState[] states = SwerveConstants.kinematics.toSwerveModuleStates(speeds);
         setModuleStates(states);

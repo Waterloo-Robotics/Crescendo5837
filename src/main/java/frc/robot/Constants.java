@@ -21,9 +21,9 @@ public class Constants {
         public static final double kDriveI = 0;
         public static final double kDriveD = 0;
 
-        public static final double kAngleP = .001;
+        public static final double kAngleP = .00005;
         public static final double kAngleI = 0;
-        public static final double kAngleD = 0;
+        public static final double kAngleD = 0.001;
 
         public static class FL {
             public static final int kDriveID = 3;

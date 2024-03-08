@@ -4,7 +4,7 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import edu.wpi.first.math.geometry.Rotation2d;
 
 public class SwerveEncoder {
-    private CANcoder encoder;
+    public CANcoder encoder;
     private double offset;
     private boolean inverted;
 
@@ -21,7 +21,7 @@ public class SwerveEncoder {
     }
 
     /** Converts the encoder output to -180 to 180 */
-    private double convertEncoderToDegrees() {
+    public double convertEncoderToDegrees() {
         double absPosition = encoder.getAbsolutePosition().getValue();
         if(inverted) {
             absPosition = 1 - absPosition;
