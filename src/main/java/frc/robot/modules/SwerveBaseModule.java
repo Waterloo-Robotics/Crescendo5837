@@ -90,6 +90,28 @@ public class SwerveBaseModule {
         setModuleStates(states);
     }
 
+    private void test_steer() {
+        /* The goal of this function is to set every swerve module to the same angle */
+        /* Get the inputs from the controller */
+        double x = input_controller.getLeftX();
+        double y = input_controller.getLeftY();
+
+        /* Apply a deadband to prevent stick drift */
+        x = MathUtil.applyDeadband(x, 0.1);
+        y = MathUtil.applyDeadband(y, 0.1);
+
+        double angle = Math.atan2(y, x);
+
+        SwerveModuleState[] states = {
+                new SwerveModuleState(0, Rotation2d.fromDegrees(angle)),
+                new SwerveModuleState(0, Rotation2d.fromDegrees(angle)),
+                new SwerveModuleState(0, Rotation2d.fromDegrees(angle)),
+                new SwerveModuleState(0, Rotation2d.fromDegrees(angle))
+        };
+        setModuleStates(states);
+
+    }
+
     public void update() {
         switch (current_state) {
             case XBOX:
@@ -97,6 +119,9 @@ public class SwerveBaseModule {
                 break;
             case LOCK:
                 lock();
+                break;
+            case TEST_STEER:
+                test_steer();
                 break;
             default:
                 lock();
@@ -112,6 +137,7 @@ public class SwerveBaseModule {
 
     public enum DriveBaseStates {
         XBOX,
-        LOCK
+        LOCK,
+        TEST_STEER
     }
 }
