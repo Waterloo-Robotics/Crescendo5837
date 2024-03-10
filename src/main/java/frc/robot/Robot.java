@@ -11,8 +11,12 @@ import com.revrobotics.CANSparkMax;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticHub;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.modules.IntakeModule;
@@ -34,6 +38,9 @@ public class Robot extends TimedRobot {
 
     // PDH
 
+    /* Controllers */
+    XboxController driver_controller = new XboxController(1);
+
     /* Drive System */
     static CANSparkMax frontLeftSteerNeo = new CANSparkMax(2, MotorType.kBrushless);
     static CANSparkMax frontLeftDriveNeo = new CANSparkMax(3, MotorType.kBrushless);
@@ -54,17 +61,19 @@ public class Robot extends TimedRobot {
     /* Shooter */
     static CANSparkMax shooterAngleNeo550 = new CANSparkMax(25, MotorType.kBrushless);
     // shooter angle abs encoder
-    static CANSparkMax rightFlywheelNeo = new CANSparkMax(20, MotorType.kBrushless);
-    static CANSparkMax leftFlywheelNeo = new CANSparkMax(21, MotorType.kBrushless);
+    // static CANSparkMax rightFlywheelNeo = new CANSparkMax(20, MotorType.kBrushless);
+    // static CANSparkMax leftFlywheelNeo = new CANSparkMax(21, MotorType.kBrushless);
 
     /* Climber */
-    static CANSparkMax rightClimberNeo = new CANSparkMax(22, MotorType.kBrushless);
-    static CANSparkMax leftClimberNeo = new CANSparkMax(23, MotorType.kBrushless);
+    // static CANSparkMax rightClimberNeo = new CANSparkMax(22, MotorType.kBrushless);
+    // static CANSparkMax leftClimberNeo = new CANSparkMax(23, MotorType.kBrushless);
 
     /* Intake */
     static CANSparkMax intakeNeo550 = new CANSparkMax(24, MotorType.kBrushless);
 
     PneumaticHub pneumaticHub = new PneumaticHub(40);
+    DoubleSolenoid right_cylinder = pneumaticHub.makeDoubleSolenoid(0, 1);
+    DoubleSolenoid left_cylinder = pneumaticHub.makeDoubleSolenoid(2, 3);
 
     CANdle led1 = new CANdle(45);
     CANdle led2 = new CANdle(46);
@@ -100,6 +109,7 @@ public class Robot extends TimedRobot {
         m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
         m_chooser.addOption("My Auto", kCustomAuto);
         SmartDashboard.putData("Auto choices", m_chooser);
+
     }
 
     /**
@@ -115,18 +125,9 @@ public class Robot extends TimedRobot {
     @Override
     public void robotPeriodic() {
 
-        // x = tx.getDouble(0.0);
-        // y = ty.getDouble(0.0);
-        // area = ta.getDouble(0.0);
-        // tx = LimelightHelpers.getTX("");
-        // ty = LimelightHelpers.getTY("");
-        // area = LimelightHelpers.getTA("");
-        // tagID = LimelightHelpers.getFiducialID("");
-
-        // SmartDashboard.putNumber("LimelightTX", tx);
-        // SmartDashboard.putNumber("LimelightTY", ty);
-        // SmartDashboard.putNumber("LimelightArea", area);
-        // SmartDashboard.putNumber("LimelightTagID", tagID);
+        SmartDashboard.putNumber("Compressor Current", pneumaticHub.getCompressorCurrent());
+        SmartDashboard.putNumber("Solenoids Current", pneumaticHub.getSolenoidsTotalCurrent());
+        SmartDashboard.putNumber("Pressure", pneumaticHub.getPressure(0));
 
     }
 
@@ -193,11 +194,23 @@ public class Robot extends TimedRobot {
     /** This function is called once when test mode is enabled. */
     @Override
     public void testInit() {
+        /* Enable the compressor with the analog pressure sensor */
+        pneumaticHub.enableCompressorAnalog(90, 120);
     }
 
     /** This function is called periodically during test mode. */
     @Override
     public void testPeriodic() {
+        if (driver_controller.getAButtonPressed())
+        {
+            right_cylinder.set(Value.kForward);
+            left_cylinder.set(Value.kForward);
+        }
+        else if (driver_controller.getBButtonPressed())
+        {
+            right_cylinder.set(Value.kReverse);
+            left_cylinder.set(Value.kReverse);
+        }
     }
 
     /** This function is called once when the robot is first started up. */
