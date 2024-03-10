@@ -210,10 +210,13 @@ public class Robot extends TimedRobot {
         double shooter_power = MathUtil.applyDeadband(driver_controller.getLeftY(), 0.1);
 
         if (driver_controller.getRightBumper()) {
-            transferNeo.set(0.5);            
+            transferNeo.set(0.5); 
+            intakeNeo550.set(0.5);           
         }
         else {
             transferNeo.set(0);
+            intakeNeo550.set(0);           
+
         }
 
         if (driver_controller.getAButton()) {
