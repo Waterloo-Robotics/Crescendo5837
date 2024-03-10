@@ -8,11 +8,14 @@ import com.ctre.phoenix.led.CANdle;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
+
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.PneumaticHub;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.modules.IntakeModule;
@@ -31,6 +34,8 @@ import com.revrobotics.CANSparkMax;
  * project.
  */
 public class Robot extends TimedRobot {
+
+    XboxController driver_controller = new XboxController(1);
 
     // PDH
 
@@ -54,20 +59,19 @@ public class Robot extends TimedRobot {
     /* Shooter */
     static CANSparkMax shooterAngleNeo550 = new CANSparkMax(25, MotorType.kBrushless);
     // shooter angle abs encoder
+    static CANSparkMax transferNeo = new CANSparkMax(19, MotorType.kBrushless);
+
     static CANSparkMax rightFlywheelNeo = new CANSparkMax(20, MotorType.kBrushless);
     static CANSparkMax leftFlywheelNeo = new CANSparkMax(21, MotorType.kBrushless);
 
-    /* Climber */
-    static CANSparkMax rightClimberNeo = new CANSparkMax(22, MotorType.kBrushless);
-    static CANSparkMax leftClimberNeo = new CANSparkMax(23, MotorType.kBrushless);
 
     /* Intake */
     static CANSparkMax intakeNeo550 = new CANSparkMax(24, MotorType.kBrushless);
 
     PneumaticHub pneumaticHub = new PneumaticHub(40);
 
-    CANdle led1 = new CANdle(45);
-    CANdle led2 = new CANdle(46);
+    // CANdle led1 = new CANdle(45);
+    // CANdle led2 = new CANdle(46);
 
     /* Create intake module */
     IntakeModule intake = new IntakeModule(intakeNeo550);
@@ -127,6 +131,10 @@ public class Robot extends TimedRobot {
         // SmartDashboard.putNumber("LimelightTY", ty);
         // SmartDashboard.putNumber("LimelightArea", area);
         // SmartDashboard.putNumber("LimelightTagID", tagID);
+
+        SmartDashboard.putNumber("L Current", leftFlywheelNeo.getOutputCurrent());
+        SmartDashboard.putNumber("R Current", rightFlywheelNeo.getOutputCurrent());
+
 
     }
 
@@ -193,11 +201,30 @@ public class Robot extends TimedRobot {
     /** This function is called once when test mode is enabled. */
     @Override
     public void testInit() {
+        pneumaticHub.disableCompressor();
     }
 
     /** This function is called periodically during test mode. */
     @Override
     public void testPeriodic() {
+        double shooter_power = MathUtil.applyDeadband(driver_controller.getLeftY(), 0.1);
+
+        if (driver_controller.getRightBumper()) {
+            transferNeo.set(0.5);            
+        }
+        else {
+            transferNeo.set(0);
+        }
+
+        if (driver_controller.getAButton()) {
+            rightFlywheelNeo.set(shooter_power);
+            leftFlywheelNeo.set(-shooter_power*0.8);
+        }
+        else {
+            rightFlywheelNeo.set(0);
+            leftFlywheelNeo.set(0);
+        }
+        
     }
 
     /** This function is called once when the robot is first started up. */
