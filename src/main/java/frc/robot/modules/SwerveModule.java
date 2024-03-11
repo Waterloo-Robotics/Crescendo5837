@@ -27,6 +27,8 @@ public class SwerveModule {
 
     private Rotation2d last_angle;
 
+    public SwerveModuleState last_state;
+
     public SwerveModule(int steer_id, int drive_id, int angle_id) {
         drive_spark = new CANSparkMax(drive_id, MotorType.kBrushless);
 
@@ -41,6 +43,7 @@ public class SwerveModule {
         drive_encoder.setPositionConversionFactor(kDistancePerMotorRotation);
 
         steer_spark = new CANSparkMax(steer_id, MotorType.kBrushless);
+        steer_spark.setInverted(true);
         steer_cancoder = new CANcoder(angle_id);
 
         drive_controller = new PIDController(0.02, 0, 0);
@@ -57,9 +60,11 @@ public class SwerveModule {
          * Optimize the state - this handles reversing direction and minimizes the
          * change in heading
          */
-        state = SwerveModuleState.optimize(state, last_angle);
+        // state = SwerveModuleState.optimize(state, last_angle);
 
-        double drive_output = MathUtil.clamp(drive_controller.calculate(drive_encoder.getVelocity(), state.speedMetersPerSecond), -0.05, 0.05);
+        
+        // double drive_output = MathUtil.clamp(drive_controller.calculate(drive_encoder.getVelocity(), state.speedMetersPerSecond), -0.05, 0.05);
+        double drive_output = MathUtil.clamp(state.speedMetersPerSecond, -0.10, 0.10);
         double steer_output = MathUtil.clamp(angle_controller.calculate(get_raw_angle(), state.angle.getDegrees()), -0.5, 0.5);
 
         /* Set the new powers to the SPARK Max controllers */
@@ -68,11 +73,12 @@ public class SwerveModule {
 
         /* Update last angle for use next time */
         last_angle = state.angle;
+        last_state = state;
 
     }
 
     public double get_raw_angle() {
-        return steer_cancoder.getAbsolutePosition().getValue() * -360 - 180;
+        return steer_cancoder.getAbsolutePosition().getValue() * 360 - 180;
     }
 
     public SwerveModulePosition get_module_position() {

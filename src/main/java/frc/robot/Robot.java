@@ -16,6 +16,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.wpilibj.PneumaticHub;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
@@ -99,6 +100,8 @@ public class Robot extends TimedRobot {
 
     double angle;
 
+    private StructArrayPublisher<SwerveModuleState> publisher;
+
     /**
      * This function is run when the robot is first started up and should be used
      * for any
@@ -110,7 +113,9 @@ public class Robot extends TimedRobot {
         m_chooser.addOption("My Auto", kCustomAuto);
         SmartDashboard.putData("Auto choices", m_chooser);
 
-        drivebase.current_state = DriveBaseStates.XBOX;
+        drivebase.current_state = DriveBaseStates.STRAIGHT;
+
+        publisher = NetworkTableInstance.getDefault().getStructArrayTopic("/SwerveStates", SwerveModuleState.struct).publish();
     }
 
     /**
@@ -142,6 +147,14 @@ public class Robot extends TimedRobot {
         SmartDashboard.putNumber("1 Power", drivebase.modules[1].drive_spark.getAppliedOutput());
         SmartDashboard.putNumber("2 Power", drivebase.modules[2].drive_spark.getAppliedOutput());
         SmartDashboard.putNumber("3 Power", drivebase.modules[3].drive_spark.getAppliedOutput());
+        SmartDashboard.putNumber("0 Velocity", drivebase.modules[0].drive_spark.getAppliedOutput());
+        SmartDashboard.putNumber("1 Velocity", drivebase.modules[1].drive_spark.getAppliedOutput());
+        SmartDashboard.putNumber("2 Velocity", drivebase.modules[2].drive_spark.getAppliedOutput());
+        SmartDashboard.putNumber("3 Velocity", drivebase.modules[3].drive_spark.getAppliedOutput());
+        SmartDashboard.putNumber("0 Angle", drivebase.modules[0].get_raw_angle());
+        SmartDashboard.putNumber("1 Angle", drivebase.modules[1].get_raw_angle());
+        SmartDashboard.putNumber("2 Angle", drivebase.modules[2].get_raw_angle());
+        SmartDashboard.putNumber("3 Angle", drivebase.modules[3].get_raw_angle());
 
         /* The goal of this function is to set every swerve module to the same angle */
         /* Get the inputs from the controller */
@@ -156,6 +169,14 @@ public class Robot extends TimedRobot {
 
         SmartDashboard.putNumber("Desired Angle", angle);
         SmartDashboard.putNumber("Data", drivebase.modules[0].angle_controller.getPositionError());
+
+        publisher.set(new SwerveModuleState[] {
+            drivebase.modules[0].last_state,
+            drivebase.modules[1].last_state,
+            drivebase.modules[2].last_state,
+            drivebase.modules[3].last_state,
+        });
+
     }
 
     /**
@@ -221,6 +242,7 @@ public class Robot extends TimedRobot {
     /** This function is called once when test mode is enabled. */
     @Override
     public void testInit() {
+        pneumaticHub.disableCompressor();
     }
 
     /** This function is called periodically during test mode. */
@@ -229,7 +251,6 @@ public class Robot extends TimedRobot {
         if (xbox_controller.getAButton())
         {
             drivebase.update();
-            // drivebase.modules[0].set_module_state(new SwerveModuleState(0, Rotation2d.fromDegrees(angle)));
         }
         else {
             drivebase.stop();
