@@ -1,18 +1,17 @@
 package frc.robot.modules;
 
-import com.revrobotics.CANSparkMax;
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
-import javax.management.MBeanRegistration;
+import edu.wpi.first.wpilibj.PneumaticHub;
+import edu.wpi.first.wpilibj.Timer;
 
 public class IntakeModule {
 
     public enum ModuleStates {
         UNKNOWN,
         EMPTY_HOME,
-        WAIT_FOR_NOTE,
+        INTAKING_NOTE,
+        NOTE_WAITING,
+        ROLLER_RESETTING,
         NOTE_FOUND,
         READY_FOR_TRANSFER;
     }
@@ -27,8 +26,8 @@ public class IntakeModule {
         COMPLETE;
     }
 
-    public ModuleStates currentState;
-    public RequestStates requestedState;
+    public ModuleStates currentState = ModuleStates.EMPTY_HOME;
+    public RequestStates requestedState = RequestStates.CANCEL_INTAKE;
     public ModuleStates lastState;
     public RequestStatusEnum requestStatus;
 
@@ -40,12 +39,15 @@ public class IntakeModule {
 
     DigitalInput noteDetectors = new DigitalInput(0);
 
-    XboxController input_device;
+    Timer noteWaitTimer;
 
     /* Class Constructor */
-    public IntakeModule(int intakeMotorID, XboxController input) {
-        this.input_device = input;
+    public IntakeModule(int intakeMotorID, PneumaticHub pneumaticHub) {
+
         this.intakeRollers = new IntakeRollersModule(intakeMotorID);
+        this.intakePosition = new IntakePositionModule(pneumaticHub);
+        this.noteWaitTimer = new Timer();
+
     }
 
     public void request_state(RequestStates state) {
@@ -54,9 +56,10 @@ public class IntakeModule {
         switch (state) {
 
             case DEPLOY_INTAKE:
-                this.currentState = ModuleStates.WAIT_FOR_NOTE;
+                this.currentState = ModuleStates.INTAKING_NOTE;
                 break;
 
+            default:
             case CANCEL_INTAKE:
                 this.currentState = ModuleStates.EMPTY_HOME;
                 break;
@@ -74,25 +77,64 @@ public class IntakeModule {
 
     public void update() {
 
-        SmartDashboard.putString("Intake Current State", String.valueOf(this.currentState));
+        switch (this.requestedState) {
 
-        switch (this.currentState) {
+            case DEPLOY_INTAKE:
 
-            case WAIT_FOR_NOTE:
-                intakeRollers.request_state(IntakeRollersModule.RequestStates.INTAKE_NOTE);
+                if (this.noteDetectors.get()) {
+
+                    this.currentState = ModuleStates.NOTE_WAITING;
+                    noteWaitTimer.reset();
+                    noteWaitTimer.start();
+
+                }
+                intakePosition.request_state(IntakePositionModule.RequestStates.DEPLOYED);
                 break;
 
-            case EMPTY_HOME:
-                intakeRollers.request_state(IntakeRollersModule.RequestStates.STOP);
+            case CANCEL_INTAKE:
                 break;
 
             default:
-                SmartDashboard.putString("Yo", "Default");
+                break;
+
+        }
+
+        switch (currentState) {
+
+            case EMPTY_HOME:
+                intakeRollers.request_state(IntakeRollersModule.RequestStates.STOP);
+                intakePosition.request_state(IntakePositionModule.RequestStates.HOME);
+                break;
+
+            case INTAKING_NOTE:
+                intakeRollers.request_state(IntakeRollersModule.RequestStates.INTAKE_NOTE);
+                intakePosition.request_state(IntakePositionModule.RequestStates.DEPLOYED);
+                break;
+
+            case NOTE_WAITING:
+                intakeRollers.request_state(IntakeRollersModule.RequestStates.STOP);
+                intakePosition.request_state(IntakePositionModule.RequestStates.HOME);
+                if (noteWaitTimer.hasElapsed(5)) {
+
+                    this.currentState = ModuleStates.ROLLER_RESETTING;
+
+                }
+                break;
+
+            case ROLLER_RESETTING:
+                intakeRollers.request_state(IntakeRollersModule.RequestStates.RESET);
+                this.currentState = ModuleStates.NOTE_FOUND;
+                break;
+
+            case NOTE_FOUND:
+                intakeRollers.request_state(IntakeRollersModule.RequestStates.POSITION_NOTE);
+                intakePosition.request_state(IntakePositionModule.RequestStates.HOME);
                 break;
 
         }
 
         intakeRollers.update();
+        intakePosition.update();
 
         lastState = currentState;
 

@@ -77,7 +77,7 @@ public class Robot extends TimedRobot {
     CANdle led2 = new CANdle(46);
 
     /* Create intake module */
-    IntakeModule intake = new IntakeModule(24, driver_controller);
+    IntakeModule intake = new IntakeModule(24, pneumaticHub);
 
     boolean a = false, b = false;
 
@@ -109,7 +109,7 @@ public class Robot extends TimedRobot {
         m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
         m_chooser.addOption("My Auto", kCustomAuto);
         SmartDashboard.putData("Auto choices", m_chooser);
-        pneumaticHub.disableCompressor();
+//        pneumaticHub.disableCompressor();
     }
 
     /**
@@ -203,6 +203,7 @@ public class Robot extends TimedRobot {
     /** This function is called once when test mode is enabled. */
     @Override
     public void testInit() {
+        pneumaticHub.enableCompressorAnalog(70, 110);
     }
 
     /** This function is called periodically during test mode. */
@@ -215,11 +216,14 @@ public class Robot extends TimedRobot {
             intake.request_state(IntakeModule.RequestStates.DEPLOY_INTAKE);
             intake.update();
 
-        } else {
+        } else if (driver_controller.getBButton()) {
 
-            intake.intakeRollers.intakeRollerMotor.set(0);
+            intake.request_state(IntakeModule.RequestStates.CANCEL_INTAKE);
+            intake.update();
 
         }
+
+        intake.update();
 
     }
 
