@@ -65,7 +65,7 @@ public class SwerveModule {
         state = SwerveModuleState.optimize(state, last_angle);
         
         // double drive_output = MathUtil.clamp(drive_controller.calculate(drive_encoder.getVelocity(), state.speedMetersPerSecond), -0.05, 0.05);
-        double drive_output = MathUtil.clamp(state.speedMetersPerSecond, -0.10, 0.10);
+        double drive_output = MathUtil.clamp(state.speedMetersPerSecond, -0.20, 0.20);
         double steer_output = MathUtil.clamp(angle_controller.calculate(get_raw_angle(), state.angle.getDegrees()), -0.5, 0.5);
 
         /* Set the new powers to the SPARK Max controllers */
