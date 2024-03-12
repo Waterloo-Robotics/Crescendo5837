@@ -4,13 +4,19 @@
 
 package frc.robot;
 
+import java.lang.constant.DirectMethodHandleDesc;
+
 import com.ctre.phoenix.led.CANdle;
-import com.ctre.phoenix6.hardware.CANcoder;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
+
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.wpilibj.PneumaticHub;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -23,6 +29,8 @@ import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkLowLevel;
 import com.revrobotics.CANSparkMax;
 import frc.robot.modules.IntakeRollersModule;
+import frc.robot.modules.SwerveBaseModule;
+import frc.robot.modules.SwerveBaseModule.DriveBaseStates;;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -45,36 +53,42 @@ public class Robot extends TimedRobot {
     PowerDistribution pdh = new PowerDistribution();
 
     /* Drive System */
-    static CANSparkMax frontLeftSteerNeo = new CANSparkMax(2, MotorType.kBrushless);
-    static CANSparkMax frontLeftDriveNeo = new CANSparkMax(3, MotorType.kBrushless);
-    static CANcoder frontLeftSteerEncoder = new CANcoder(4);
+    // static CANSparkMax frontLeftSteerNeo = new CANSparkMax(2, MotorType.kBrushless);
+    // static CANSparkMax frontLeftDriveNeo = new CANSparkMax(3, MotorType.kBrushless);
+    // static CANcoder frontLeftSteerEncoder = new CANcoder(4);
 
-    static CANSparkMax frontRightSteerNeo = new CANSparkMax(5, MotorType.kBrushless);
-    static CANSparkMax frontRightDriveNeo = new CANSparkMax(6, MotorType.kBrushless);
-    static CANcoder frontRightSteerEncoder = new CANcoder(7);
+    // static CANSparkMax frontRightSteerNeo = new CANSparkMax(5, MotorType.kBrushless);
+    // static CANSparkMax frontRightDriveNeo = new CANSparkMax(6, MotorType.kBrushless);
+    // static CANcoder frontRightSteerEncoder = new CANcoder(7);
 
-    static CANSparkMax rearLeftSteerNeo = new CANSparkMax(8, MotorType.kBrushless);
-    static CANSparkMax rearLeftDriveNeo = new CANSparkMax(9, MotorType.kBrushless);
-    static CANcoder rearLeftSteerEncoder = new CANcoder(10);
+    // static CANSparkMax rearLeftSteerNeo = new CANSparkMax(8, MotorType.kBrushless);
+    // static CANSparkMax rearLeftDriveNeo = new CANSparkMax(9, MotorType.kBrushless);
+    // static CANcoder rearLeftSteerEncoder = new CANcoder(10);
 
-    static CANSparkMax rearRightSteerNeo = new CANSparkMax(11, MotorType.kBrushless);
-    static CANSparkMax rearRightDriveNeo = new CANSparkMax(12, MotorType.kBrushless);
-    static CANcoder rearRightSteerEncoder = new CANcoder(13);
+    // static CANSparkMax rearRightSteerNeo = new CANSparkMax(11, MotorType.kBrushless);
+    // static CANSparkMax rearRightDriveNeo = new CANSparkMax(12, MotorType.kBrushless);
+    // static CANcoder rearRightSteerEncoder = new CANcoder(13);
+    XboxController xbox_controller = new XboxController(1);
+
+    SwerveBaseModule drivebase = new SwerveBaseModule(xbox_controller);
 
     /* Shooter */
     static CANSparkMax shooterAngleNeo550 = new CANSparkMax(25, MotorType.kBrushless);
     // shooter angle abs encoder
-    static CANSparkMax rightFlywheelNeo = new CANSparkMax(20, MotorType.kBrushless);
-    static CANSparkMax leftFlywheelNeo = new CANSparkMax(21, MotorType.kBrushless);
+    // static CANSparkMax rightFlywheelNeo = new CANSparkMax(20, MotorType.kBrushless);
+    // static CANSparkMax leftFlywheelNeo = new CANSparkMax(21, MotorType.kBrushless);
 
     /* Climber */
-//    static CANSparkMax rightClimberNeo = new CANSparkMax(22, MotorType.kBrushless);
-//    static CANSparkMax leftClimberNeo = new CANSparkMax(23, MotorType.kBrushless);
+    // static CANSparkMax rightClimberNeo = new CANSparkMax(22, MotorType.kBrushless);
+    // static CANSparkMax leftClimberNeo = new CANSparkMax(23, MotorType.kBrushless);
+
+    /* Intake */
+    static CANSparkMax intakeNeo550 = new CANSparkMax(24, MotorType.kBrushless);
 
     PneumaticHub pneumaticHub = new PneumaticHub(40);
 
-    CANdle led1 = new CANdle(45);
-    CANdle led2 = new CANdle(46);
+    // CANdle led1 = new CANdle(45);
+    // CANdle led2 = new CANdle(46);
 
     /* Create intake module */
     IntakeModule intake = new IntakeModule(24, pneumaticHub);
@@ -99,6 +113,10 @@ public class Robot extends TimedRobot {
     private String m_autoSelected;
     private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
+    double angle;
+
+    private StructArrayPublisher<SwerveModuleState> publisher;
+
     /**
      * This function is run when the robot is first started up and should be used
      * for any
@@ -109,7 +127,10 @@ public class Robot extends TimedRobot {
         m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
         m_chooser.addOption("My Auto", kCustomAuto);
         SmartDashboard.putData("Auto choices", m_chooser);
-//        pneumaticHub.disableCompressor();
+
+        drivebase.current_state = DriveBaseStates.XBOX;
+
+        publisher = NetworkTableInstance.getDefault().getStructArrayTopic("/SwerveStates", SwerveModuleState.struct).publish();
     }
 
     /**
@@ -224,6 +245,7 @@ public class Robot extends TimedRobot {
         }
 
         intake.update();
+        drivebase.update();
 
     }
 
