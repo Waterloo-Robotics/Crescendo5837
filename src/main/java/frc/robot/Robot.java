@@ -143,39 +143,6 @@ public class Robot extends TimedRobot {
         // SmartDashboard.putNumber("LimelightTY", ty);
         // SmartDashboard.putNumber("LimelightArea", area);
         // SmartDashboard.putNumber("LimelightTagID", tagID);
-        SmartDashboard.putNumber("0 Power", drivebase.modules[0].drive_spark.get());
-        SmartDashboard.putNumber("1 Power", drivebase.modules[1].drive_spark.get());
-        SmartDashboard.putNumber("2 Power", drivebase.modules[2].drive_spark.get());
-        SmartDashboard.putNumber("3 Power", drivebase.modules[3].drive_spark.get());
-        SmartDashboard.putNumber("0 Velocity", drivebase.modules[0].drive_spark.getEncoder().getVelocity());
-        SmartDashboard.putNumber("1 Velocity", drivebase.modules[1].drive_spark.getEncoder().getVelocity());
-        SmartDashboard.putNumber("2 Velocity", drivebase.modules[2].drive_spark.getEncoder().getVelocity());
-        SmartDashboard.putNumber("3 Velocity", drivebase.modules[3].drive_spark.getEncoder().getVelocity());
-        SmartDashboard.putNumber("0 Angle", drivebase.modules[0].get_raw_angle());
-        SmartDashboard.putNumber("1 Angle", drivebase.modules[1].get_raw_angle());
-        SmartDashboard.putNumber("2 Angle", drivebase.modules[2].get_raw_angle());
-        SmartDashboard.putNumber("3 Angle", drivebase.modules[3].get_raw_angle());
-
-        /* The goal of this function is to set every swerve module to the same angle */
-        /* Get the inputs from the controller */
-        double x = xbox_controller.getLeftX();
-        double y = xbox_controller.getLeftY();
-
-        /* Apply a deadband to prevent stick drift */
-        x = MathUtil.applyDeadband(x, 0.1);
-        y = MathUtil.applyDeadband(y, 0.1);
-
-        angle = Math.atan2(y, x) * (180  / Math.PI);
-
-        SmartDashboard.putNumber("Desired Angle", angle);
-        SmartDashboard.putNumber("Data", drivebase.modules[0].angle_controller.getPositionError());
-
-        publisher.set(new SwerveModuleState[] {
-            drivebase.modules[0].last_state,
-            drivebase.modules[1].last_state,
-            drivebase.modules[2].last_state,
-            drivebase.modules[3].last_state,
-        });
 
     }
 
@@ -248,13 +215,9 @@ public class Robot extends TimedRobot {
     /** This function is called periodically during test mode. */
     @Override
     public void testPeriodic() {
-        if (xbox_controller.getAButton())
-        {
-            drivebase.update();
-        }
-        else {
-            drivebase.stop();
-        }
+
+        drivebase.update();
+
     }
 
     /** This function is called once when the robot is first started up. */

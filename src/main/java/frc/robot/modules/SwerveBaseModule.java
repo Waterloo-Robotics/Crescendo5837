@@ -29,6 +29,8 @@ public class SwerveBaseModule {
     public DriveBaseStates current_state;
 
     private XboxController input_controller;
+    private int lock_counter;
+    private boolean lock;
 
     public SwerveBaseModule(XboxController drive_controller) {
         /* Create the four swerve modules passing in each corner's CAN ID */
@@ -50,46 +52,66 @@ public class SwerveBaseModule {
         positions[3] = modules[3].get_module_position();
 
         input_controller = drive_controller;
+        lock_counter = 0;
+        lock = false;
 
         // this.odometry = new SwerveDriveOdometry(kinematics, null, positions);
     }
 
-    private void drive_xbox() {
-        /* Get the inputs from the controller */
-        double x = -input_controller.getLeftX();
-        double y = input_controller.getLeftY();
-        double rotation = input_controller.getRightX();
-
-        /* Apply a deadband to prevent stick drift */
-        x = MathUtil.applyDeadband(x, 0.1);
-        y = MathUtil.applyDeadband(y, 0.1);
-        rotation = MathUtil.applyDeadband(rotation, 0.2);
-
-        /* Multiply each by max velocity to get desired velocity in each direction */
-        double x_velocity_m_s = x * Units.feetToMeters(5);
-        double y_velocity_m_s = y * Units.feetToMeters(5);
-        double rotational_vel = rotation * 4;
-
-        /*
-         * Convert velocity in each axis to a general chassis velocity then use the
-         * kinematics to convert the chassic velocity to individual swerve modules
-         * "states" ie rotation and drive velocity.
-         */
-        ChassisSpeeds speeds = new ChassisSpeeds(x_velocity_m_s, y_velocity_m_s, rotational_vel);
-        SwerveModuleState[] states = kinematics.toSwerveModuleStates(speeds);
-
-        /* Send the new states to each swerve module */
+    private void lock() {
+        SwerveModuleState[] states = {
+                new SwerveModuleState(0, Rotation2d.fromDegrees(45)),
+                new SwerveModuleState(0, Rotation2d.fromDegrees(-45)),
+                new SwerveModuleState(0, Rotation2d.fromDegrees(-45)),
+                new SwerveModuleState(0, Rotation2d.fromDegrees(45))
+        };
         setModuleStates(states);
     }
 
-    private void lock() {
-        SwerveModuleState[] states = {
-                new SwerveModuleState(0, Rotation2d.fromDegrees(-45)),
-                new SwerveModuleState(0, Rotation2d.fromDegrees(45)),
-                new SwerveModuleState(0, Rotation2d.fromDegrees(45)),
-                new SwerveModuleState(0, Rotation2d.fromDegrees(-45))
-        };
-        setModuleStates(states);
+    private void drive_xbox() {
+        /* Get the inputs from the controller */
+        double x = input_controller.getLeftY();
+        double y = input_controller.getLeftX();
+        double rotation = input_controller.getRightX();
+
+        /* Apply a deadband to prevent stick drift */
+        x = MathUtil.applyDeadband(x, 0.25);
+        y = MathUtil.applyDeadband(y, 0.25);
+        rotation = MathUtil.applyDeadband(rotation, 0.2);
+
+        /* If no inputs are present, lock the drivebase */
+        if (Math.abs(x) + Math.abs(y) + Math.abs(rotation) < 0.05) {
+            if (lock) {
+                lock();
+            } else if (lock_counter > 50) {
+                lock = true;
+            } else {
+                lock_counter++;
+            }
+
+        } else {
+            lock_counter = 0;
+            lock = false;
+        }
+
+        if (!lock) {
+            /* Multiply each by max velocity to get desired velocity in each direction */
+            double x_velocity_m_s = x * Units.feetToMeters(5);
+            double y_velocity_m_s = y * Units.feetToMeters(5);
+            double rotational_vel = rotation * 4;
+
+            /*
+            * Convert velocity in each axis to a general chassis velocity then use the
+            * kinematics to convert the chassic velocity to individual swerve modules
+            * "states" ie rotation and drive velocity.
+            */
+            ChassisSpeeds speeds = new ChassisSpeeds(x_velocity_m_s, y_velocity_m_s, rotational_vel);
+            SwerveModuleState[] states = kinematics.toSwerveModuleStates(speeds);
+
+            /* Send the new states to each swerve module */
+            setModuleStates(states);
+        }
+
     }
 
     private void straight() {

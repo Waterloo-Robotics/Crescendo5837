@@ -32,6 +32,7 @@ public class SwerveModule {
     public SwerveModule(int steer_id, int drive_id, int angle_id, boolean reverse_drive) {
         drive_spark = new CANSparkMax(drive_id, MotorType.kBrushless);
         drive_spark.setInverted(reverse_drive);
+        drive_spark.setIdleMode(CANSparkMax.IdleMode.kBrake);
 
         drive_encoder = drive_spark.getEncoder();
 
