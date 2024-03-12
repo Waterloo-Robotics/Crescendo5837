@@ -113,7 +113,7 @@ public class Robot extends TimedRobot {
         m_chooser.addOption("My Auto", kCustomAuto);
         SmartDashboard.putData("Auto choices", m_chooser);
 
-        drivebase.current_state = DriveBaseStates.STRAIGHT;
+        drivebase.current_state = DriveBaseStates.XBOX;
 
         publisher = NetworkTableInstance.getDefault().getStructArrayTopic("/SwerveStates", SwerveModuleState.struct).publish();
     }
@@ -143,14 +143,14 @@ public class Robot extends TimedRobot {
         // SmartDashboard.putNumber("LimelightTY", ty);
         // SmartDashboard.putNumber("LimelightArea", area);
         // SmartDashboard.putNumber("LimelightTagID", tagID);
-        SmartDashboard.putNumber("0 Power", drivebase.modules[0].drive_spark.getAppliedOutput());
-        SmartDashboard.putNumber("1 Power", drivebase.modules[1].drive_spark.getAppliedOutput());
-        SmartDashboard.putNumber("2 Power", drivebase.modules[2].drive_spark.getAppliedOutput());
-        SmartDashboard.putNumber("3 Power", drivebase.modules[3].drive_spark.getAppliedOutput());
-        SmartDashboard.putNumber("0 Velocity", drivebase.modules[0].drive_spark.getAppliedOutput());
-        SmartDashboard.putNumber("1 Velocity", drivebase.modules[1].drive_spark.getAppliedOutput());
-        SmartDashboard.putNumber("2 Velocity", drivebase.modules[2].drive_spark.getAppliedOutput());
-        SmartDashboard.putNumber("3 Velocity", drivebase.modules[3].drive_spark.getAppliedOutput());
+        SmartDashboard.putNumber("0 Power", drivebase.modules[0].drive_spark.get());
+        SmartDashboard.putNumber("1 Power", drivebase.modules[1].drive_spark.get());
+        SmartDashboard.putNumber("2 Power", drivebase.modules[2].drive_spark.get());
+        SmartDashboard.putNumber("3 Power", drivebase.modules[3].drive_spark.get());
+        SmartDashboard.putNumber("0 Velocity", drivebase.modules[0].drive_spark.getEncoder().getVelocity());
+        SmartDashboard.putNumber("1 Velocity", drivebase.modules[1].drive_spark.getEncoder().getVelocity());
+        SmartDashboard.putNumber("2 Velocity", drivebase.modules[2].drive_spark.getEncoder().getVelocity());
+        SmartDashboard.putNumber("3 Velocity", drivebase.modules[3].drive_spark.getEncoder().getVelocity());
         SmartDashboard.putNumber("0 Angle", drivebase.modules[0].get_raw_angle());
         SmartDashboard.putNumber("1 Angle", drivebase.modules[1].get_raw_angle());
         SmartDashboard.putNumber("2 Angle", drivebase.modules[2].get_raw_angle());

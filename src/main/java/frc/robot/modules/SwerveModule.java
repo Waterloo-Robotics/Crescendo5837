@@ -29,8 +29,9 @@ public class SwerveModule {
 
     public SwerveModuleState last_state;
 
-    public SwerveModule(int steer_id, int drive_id, int angle_id) {
+    public SwerveModule(int steer_id, int drive_id, int angle_id, boolean reverse_drive) {
         drive_spark = new CANSparkMax(drive_id, MotorType.kBrushless);
+        drive_spark.setInverted(reverse_drive);
 
         drive_encoder = drive_spark.getEncoder();
 
@@ -60,8 +61,7 @@ public class SwerveModule {
          * Optimize the state - this handles reversing direction and minimizes the
          * change in heading
          */
-        // state = SwerveModuleState.optimize(state, last_angle);
-
+        state = SwerveModuleState.optimize(state, last_angle);
         
         // double drive_output = MathUtil.clamp(drive_controller.calculate(drive_encoder.getVelocity(), state.speedMetersPerSecond), -0.05, 0.05);
         double drive_output = MathUtil.clamp(state.speedMetersPerSecond, -0.10, 0.10);

@@ -19,8 +19,8 @@ public class SwerveBaseModule {
     public static final double kWheelOffset = Units.inchesToMeters(13.5);
     public static final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(new Translation2d[] {
             new Translation2d(kWheelOffset, kWheelOffset),
-            new Translation2d(-kWheelOffset, kWheelOffset),
             new Translation2d(kWheelOffset, -kWheelOffset),
+            new Translation2d(-kWheelOffset, kWheelOffset),
             new Translation2d(-kWheelOffset, -kWheelOffset)
     });
 
@@ -34,13 +34,13 @@ public class SwerveBaseModule {
         /* Create the four swerve modules passing in each corner's CAN ID */
         this.modules = new SwerveModule[] {
                 /* Front Left */
-                new SwerveModule(2, 3, 4),
+                new SwerveModule(2, 3, 4, false),
                 /* Front Right */
-                new SwerveModule(5, 6, 7),
+                new SwerveModule(5, 6, 7, false),
                 /* Rear Left */
-                new SwerveModule(8, 9, 10),
+                new SwerveModule(8, 9, 10, false),
                 /* Rear Right */
-                new SwerveModule(11, 12, 13)
+                new SwerveModule(11, 12, 13, false)
         };
 
         this.positions = new SwerveModulePosition[4];
@@ -56,14 +56,14 @@ public class SwerveBaseModule {
 
     private void drive_xbox() {
         /* Get the inputs from the controller */
-        double x = input_controller.getLeftX();
+        double x = -input_controller.getLeftX();
         double y = input_controller.getLeftY();
         double rotation = input_controller.getRightX();
 
         /* Apply a deadband to prevent stick drift */
         x = MathUtil.applyDeadband(x, 0.1);
         y = MathUtil.applyDeadband(y, 0.1);
-        rotation = MathUtil.applyDeadband(rotation, 0.1);
+        rotation = MathUtil.applyDeadband(rotation, 0.2);
 
         /* Multiply each by max velocity to get desired velocity in each direction */
         double x_velocity_m_s = x * Units.feetToMeters(5);
