@@ -1,6 +1,11 @@
 package frc.robot.modules;
 
 import com.revrobotics.CANSparkMax;
+import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
+import javax.management.MBeanRegistration;
 
 public class IntakeModule {
 
@@ -31,15 +36,32 @@ public class IntakeModule {
 
     /* Create sub-modules */
     private IntakePositionModule intakePosition;
-    private IntakeRollersModule intakeRollers;
+    public IntakeRollersModule intakeRollers;
+
+    DigitalInput noteDetectors = new DigitalInput(0);
+
+    XboxController input_device;
 
     /* Class Constructor */
-    public IntakeModule(CANSparkMax intakeMotorController) {
-        this.intakeRollers = new IntakeRollersModule(intakeMotorController);
+    public IntakeModule(int intakeMotorID, XboxController input) {
+        this.input_device = input;
+        this.intakeRollers = new IntakeRollersModule(intakeMotorID);
     }
 
     public void request_state(RequestStates state) {
         this.requestedState = state;
+
+        switch (state) {
+
+            case DEPLOY_INTAKE:
+                this.currentState = ModuleStates.WAIT_FOR_NOTE;
+                break;
+
+            case CANCEL_INTAKE:
+                this.currentState = ModuleStates.EMPTY_HOME;
+                break;
+
+        }
     }
 
     public RequestStatusEnum get_request_status() {
@@ -48,6 +70,32 @@ public class IntakeModule {
 
     public ModuleStates get_state() {
         return this.currentState;
+    }
+
+    public void update() {
+
+        SmartDashboard.putString("Intake Current State", String.valueOf(this.currentState));
+
+        switch (this.currentState) {
+
+            case WAIT_FOR_NOTE:
+                intakeRollers.request_state(IntakeRollersModule.RequestStates.INTAKE_NOTE);
+                break;
+
+            case EMPTY_HOME:
+                intakeRollers.request_state(IntakeRollersModule.RequestStates.STOP);
+                break;
+
+            default:
+                SmartDashboard.putString("Yo", "Default");
+                break;
+
+        }
+
+        intakeRollers.update();
+
+        lastState = currentState;
+
     }
 
 }

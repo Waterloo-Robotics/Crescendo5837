@@ -14,6 +14,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.PneumaticHub;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.modules.IntakeModule;
@@ -21,6 +22,7 @@ import frc.robot.modules.IntakeModule;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkLowLevel;
 import com.revrobotics.CANSparkMax;
+import frc.robot.modules.IntakeRollersModule;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -32,6 +34,12 @@ import com.revrobotics.CANSparkMax;
  * project.
  */
 public class Robot extends TimedRobot {
+
+    // Drive Controllers
+    XboxController driver_controller = new XboxController(1);
+//    Joystick farmSim1 = new Joystick(4);
+//    Joystick farmSim2 = new Joystick(5);
+
 
     // PDH
     PowerDistribution pdh = new PowerDistribution();
@@ -60,11 +68,8 @@ public class Robot extends TimedRobot {
     static CANSparkMax leftFlywheelNeo = new CANSparkMax(21, MotorType.kBrushless);
 
     /* Climber */
-    static CANSparkMax rightClimberNeo = new CANSparkMax(22, MotorType.kBrushless);
-    static CANSparkMax leftClimberNeo = new CANSparkMax(23, MotorType.kBrushless);
-
-    /* Intake */
-    static CANSparkMax intakeNeo550 = new CANSparkMax(24, MotorType.kBrushless);
+//    static CANSparkMax rightClimberNeo = new CANSparkMax(22, MotorType.kBrushless);
+//    static CANSparkMax leftClimberNeo = new CANSparkMax(23, MotorType.kBrushless);
 
     PneumaticHub pneumaticHub = new PneumaticHub(40);
 
@@ -72,7 +77,9 @@ public class Robot extends TimedRobot {
     CANdle led2 = new CANdle(46);
 
     /* Create intake module */
-    IntakeModule intake = new IntakeModule(intakeNeo550);
+    IntakeModule intake = new IntakeModule(24, driver_controller);
+
+    boolean a = false, b = false;
 
     // 2 limelights
     // double tx = LimelightHelpers.getTX("");
@@ -102,6 +109,7 @@ public class Robot extends TimedRobot {
         m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
         m_chooser.addOption("My Auto", kCustomAuto);
         SmartDashboard.putData("Auto choices", m_chooser);
+        pneumaticHub.disableCompressor();
     }
 
     /**
@@ -200,6 +208,19 @@ public class Robot extends TimedRobot {
     /** This function is called periodically during test mode. */
     @Override
     public void testPeriodic() {
+
+        SmartDashboard.putBoolean("A", driver_controller.getAButton());
+        if (driver_controller.getAButton()) {
+
+            intake.request_state(IntakeModule.RequestStates.DEPLOY_INTAKE);
+            intake.update();
+
+        } else {
+
+            intake.intakeRollers.intakeRollerMotor.set(0);
+
+        }
+
     }
 
     /** This function is called once when the robot is first started up. */
