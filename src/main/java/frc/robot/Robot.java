@@ -23,12 +23,14 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.modules.FlywheelSubmodule;
 import frc.robot.modules.IntakeModule;
 
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkLowLevel;
 import com.revrobotics.CANSparkMax;
 import frc.robot.modules.IntakeRollersModule;
+import frc.robot.modules.NoteTransferModule;
 import frc.robot.modules.SwerveBaseModule;
 import frc.robot.modules.SwerveBaseModule.DriveBaseStates;;
 
@@ -52,35 +54,12 @@ public class Robot extends TimedRobot {
     // PDH
     PowerDistribution pdh = new PowerDistribution();
 
-    /* Drive System */
-    // static CANSparkMax frontLeftSteerNeo = new CANSparkMax(2, MotorType.kBrushless);
-    // static CANSparkMax frontLeftDriveNeo = new CANSparkMax(3, MotorType.kBrushless);
-    // static CANcoder frontLeftSteerEncoder = new CANcoder(4);
-
-    // static CANSparkMax frontRightSteerNeo = new CANSparkMax(5, MotorType.kBrushless);
-    // static CANSparkMax frontRightDriveNeo = new CANSparkMax(6, MotorType.kBrushless);
-    // static CANcoder frontRightSteerEncoder = new CANcoder(7);
-
-    // static CANSparkMax rearLeftSteerNeo = new CANSparkMax(8, MotorType.kBrushless);
-    // static CANSparkMax rearLeftDriveNeo = new CANSparkMax(9, MotorType.kBrushless);
-    // static CANcoder rearLeftSteerEncoder = new CANcoder(10);
-
-    // static CANSparkMax rearRightSteerNeo = new CANSparkMax(11, MotorType.kBrushless);
-    // static CANSparkMax rearRightDriveNeo = new CANSparkMax(12, MotorType.kBrushless);
-    // static CANcoder rearRightSteerEncoder = new CANcoder(13);
     XboxController xbox_controller = new XboxController(1);
 
     SwerveBaseModule drivebase = new SwerveBaseModule(xbox_controller);
 
     /* Shooter */
     static CANSparkMax shooterAngleNeo550 = new CANSparkMax(25, MotorType.kBrushless);
-    // shooter angle abs encoder
-    // static CANSparkMax rightFlywheelNeo = new CANSparkMax(20, MotorType.kBrushless);
-    // static CANSparkMax leftFlywheelNeo = new CANSparkMax(21, MotorType.kBrushless);
-
-    /* Climber */
-    // static CANSparkMax rightClimberNeo = new CANSparkMax(22, MotorType.kBrushless);
-    // static CANSparkMax leftClimberNeo = new CANSparkMax(23, MotorType.kBrushless);
 
     PneumaticHub pneumaticHub = new PneumaticHub(40);
 
@@ -90,7 +69,11 @@ public class Robot extends TimedRobot {
     /* Create intake module */
     IntakeModule intake = new IntakeModule(24, pneumaticHub);
 
-    boolean a = false, b = false;
+    /* Create note transfer module */
+    NoteTransferModule note_transfer = new NoteTransferModule(19);
+
+    /* Create flywheel module */
+    FlywheelSubmodule flywheels = new FlywheelSubmodule(20, 21);
 
     // 2 limelights
     // double tx = LimelightHelpers.getTX("");
@@ -244,9 +227,32 @@ public class Robot extends TimedRobot {
             intake.request_state(IntakeModule.RequestStates.EMPTY_INTAKE);
         }
 
+        /* Up on dpad */
+        if (driver_controller.getPOV() == 0) {
+            flywheels.request_state(FlywheelSubmodule.RequestStates.SPIN_UP_AMP);
+        } 
+        /* Right on dpad */
+        else if (driver_controller.getPOV() == 90) {
+            flywheels.request_state(FlywheelSubmodule.RequestStates.SPIN_UP_SPEAKER);
+        }
+        /* Down on dpad */
+        else if (driver_controller.getPOV() == 180) {
+            flywheels.request_state(FlywheelSubmodule.RequestStates.STOP);
+        }
+
+        if (driver_controller.getStartButtonPressed()) {
+            intake.request_state(IntakeModule.RequestStates.SHOOT);
+            note_transfer.request_state(NoteTransferModule.RequestStates.SHOOT);
+        } else if (driver_controller.getStartButtonReleased()) {
+            intake.request_state(IntakeModule.RequestStates.CANCEL_INTAKE);
+            note_transfer.request_state(NoteTransferModule.RequestStates.STOP);
+        }
+
         intake.update();
         /* Run drivebase */
         drivebase.update();
+        note_transfer.update();
+        flywheels.update();
 
     }
 

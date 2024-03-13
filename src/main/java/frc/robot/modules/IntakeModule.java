@@ -12,6 +12,7 @@ public class IntakeModule {
         INTAKING_NOTE,
         STORING_NOTE,
         READY_FOR_SHOT,
+        SHOOTING,
         EMPTYING_INTAKE;
     }
 
@@ -19,6 +20,7 @@ public class IntakeModule {
         DEPLOY_INTAKE,
         STORE_NOTE,
         EMPTY_INTAKE,
+        SHOOT,
         CANCEL_INTAKE;
     }
 
@@ -70,6 +72,12 @@ public class IntakeModule {
                 intakeRollers.request_state(IntakeRollersModule.RequestStates.EMPTY_INTAKE);
                 intakePosition.request_state(IntakePositionModule.RequestStates.HOME);
                 this.currentState = ModuleStates.EMPTYING_INTAKE;
+                break;
+
+            case SHOOT:
+                intakeRollers.request_state(IntakeRollersModule.RequestStates.TRANSFER_NOTE);
+                intakePosition.request_state(IntakePositionModule.RequestStates.HOME);
+                this.currentState = ModuleStates.SHOOTING;
                 break;
 
             default:
@@ -125,6 +133,10 @@ public class IntakeModule {
             
             case READY_FOR_SHOT:
                 /* If we're ready for a shot we don't need to do anything, just wait until we're requested to shoot */
+                break;
+
+            case SHOOTING:
+                /* Do nothing  */
                 break;
 
             case EMPTYING_INTAKE:

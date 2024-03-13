@@ -101,6 +101,7 @@ public class IntakePositionModule {
                     transistionTimer.stop();
                     this.currentState = ModuleStates.DEPLOYED;
                 }
+                break;
 
         }
 
