@@ -82,9 +82,6 @@ public class Robot extends TimedRobot {
     // static CANSparkMax rightClimberNeo = new CANSparkMax(22, MotorType.kBrushless);
     // static CANSparkMax leftClimberNeo = new CANSparkMax(23, MotorType.kBrushless);
 
-    /* Intake */
-    static CANSparkMax intakeNeo550 = new CANSparkMax(24, MotorType.kBrushless);
-
     PneumaticHub pneumaticHub = new PneumaticHub(40);
 
     // CANdle led1 = new CANdle(45);
@@ -158,6 +155,10 @@ public class Robot extends TimedRobot {
         // SmartDashboard.putNumber("LimelightTY", ty);
         // SmartDashboard.putNumber("LimelightArea", area);
         // SmartDashboard.putNumber("LimelightTagID", tagID);
+
+        SmartDashboard.putString("Intake State", intake.get_state().toString());
+        SmartDashboard.putString("Intake Rollers State", intake.intakeRollers.get_state().toString());
+        SmartDashboard.putString("Intake Position State", intake.intakePosition.get_state().toString());
 
     }
 
@@ -233,18 +234,18 @@ public class Robot extends TimedRobot {
 
         SmartDashboard.putBoolean("A", driver_controller.getAButton());
         if (driver_controller.getAButton()) {
-
+            SmartDashboard.putString("Button", "A");
             intake.request_state(IntakeModule.RequestStates.DEPLOY_INTAKE);
-            intake.update();
-
         } else if (driver_controller.getBButton()) {
-
+            SmartDashboard.putString("Button", "B");
             intake.request_state(IntakeModule.RequestStates.CANCEL_INTAKE);
-            intake.update();
-
+        } else if (driver_controller.getYButton()) {
+            SmartDashboard.putString("Button", "Y");
+            intake.request_state(IntakeModule.RequestStates.EMPTY_INTAKE);
         }
 
         intake.update();
+        /* Run drivebase */
         drivebase.update();
 
     }

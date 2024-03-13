@@ -96,9 +96,9 @@ public class SwerveBaseModule {
 
         if (!lock) {
             /* Multiply each by max velocity to get desired velocity in each direction */
-            double x_velocity_m_s = x * Units.feetToMeters(15);
-            double y_velocity_m_s = y * Units.feetToMeters(15);
-            double rotational_vel = rotation * 4;
+            double x_velocity_m_s = x * Units.feetToMeters(1);
+            double y_velocity_m_s = y * Units.feetToMeters(1);
+            double rotational_vel = rotation * 2;
 
             /*
             * Convert velocity in each axis to a general chassis velocity then use the

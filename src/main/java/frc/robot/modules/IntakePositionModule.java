@@ -2,6 +2,7 @@ package frc.robot.modules;
 
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticHub;
+import edu.wpi.first.wpilibj.Timer;
 
 public class IntakePositionModule {
 
@@ -31,12 +32,19 @@ public class IntakePositionModule {
     DoubleSolenoid rightCylinder;
     DoubleSolenoid leftCylinder;
 
+    Timer transistionTimer;
+
+
     public IntakePositionModule(PneumaticHub pneumaticHub) {
 
         this.pneumaticHub = pneumaticHub;
         this.rightCylinder = pneumaticHub.makeDoubleSolenoid(0, 1);
         this.leftCylinder = pneumaticHub.makeDoubleSolenoid(2, 3);
 
+        this.transistionTimer = new Timer();
+
+        this.currentState = ModuleStates.HOME;
+        this.requestedState = RequestStates.HOME;
     }
 
     public final ModuleStates initialState = ModuleStates.UNKNOWN;
@@ -47,7 +55,12 @@ public class IntakePositionModule {
         switch (state) {
 
             case HOME:
-                this.currentState = ModuleStates.HOME;
+                this.currentState = ModuleStates.TRANSFERRING;
+                this.transistionTimer.reset();
+                this.transistionTimer.start();
+
+                this.rightCylinder.set(DoubleSolenoid.Value.kForward);
+                this.leftCylinder.set(DoubleSolenoid.Value.kForward);
                 break;
 
             case DEPLOYED:
@@ -67,7 +80,7 @@ public class IntakePositionModule {
 
     public void update() {
 
-        switch (requestedState) {
+        switch (currentState) {
 
             case DEPLOYED:
                 this.rightCylinder.set(DoubleSolenoid.Value.kReverse);
@@ -75,8 +88,19 @@ public class IntakePositionModule {
                 break;
 
             case HOME:
-                this.rightCylinder.set(DoubleSolenoid.Value.kForward);
-                this.leftCylinder.set(DoubleSolenoid.Value.kForward);
+                
+                break;
+            
+            case TRANSFERRING:
+                if (this.requestedState == RequestStates.HOME && this.transistionTimer.hasElapsed(3)) {
+                    /* Stop the timer and say we're home */
+                    transistionTimer.stop();
+                    this.currentState = ModuleStates.HOME;
+                } else if (this.requestedState == RequestStates.DEPLOYED && this.transistionTimer.hasElapsed(3)) {
+                    /* Stop the timer and say we're deployed */
+                    transistionTimer.stop();
+                    this.currentState = ModuleStates.DEPLOYED;
+                }
 
         }
 

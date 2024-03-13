@@ -10,14 +10,15 @@ public class IntakeModule {
         UNKNOWN,
         EMPTY_HOME,
         INTAKING_NOTE,
-        NOTE_WAITING,
-        ROLLER_RESETTING,
-        NOTE_FOUND,
-        READY_FOR_TRANSFER;
+        STORING_NOTE,
+        READY_FOR_SHOT,
+        EMPTYING_INTAKE;
     }
 
     public enum RequestStates {
         DEPLOY_INTAKE,
+        STORE_NOTE,
+        EMPTY_INTAKE,
         CANCEL_INTAKE;
     }
 
@@ -34,19 +35,16 @@ public class IntakeModule {
     public final ModuleStates initialState = ModuleStates.EMPTY_HOME;
 
     /* Create sub-modules */
-    private IntakePositionModule intakePosition;
+    public IntakePositionModule intakePosition;
     public IntakeRollersModule intakeRollers;
 
     DigitalInput noteDetectors = new DigitalInput(0);
-
-    Timer noteWaitTimer;
 
     /* Class Constructor */
     public IntakeModule(int intakeMotorID, PneumaticHub pneumaticHub) {
 
         this.intakeRollers = new IntakeRollersModule(intakeMotorID);
         this.intakePosition = new IntakePositionModule(pneumaticHub);
-        this.noteWaitTimer = new Timer();
 
     }
 
@@ -56,12 +54,28 @@ public class IntakeModule {
         switch (state) {
 
             case DEPLOY_INTAKE:
+                /* Tell the rollers to start intaking and put the intake down into deployed state */
+                intakeRollers.request_state(IntakeRollersModule.RequestStates.INTAKE_NOTE);
+                intakePosition.request_state(IntakePositionModule.RequestStates.DEPLOYED);
                 this.currentState = ModuleStates.INTAKING_NOTE;
+                break;
+            case STORE_NOTE:
+            /* We've just picked up a note */
+                intakeRollers.request_state(IntakeRollersModule.RequestStates.STOP);
+                intakePosition.request_state(IntakePositionModule.RequestStates.HOME);
+
+                this.currentState = ModuleStates.STORING_NOTE;
+                break;
+            case EMPTY_INTAKE:
+                intakeRollers.request_state(IntakeRollersModule.RequestStates.EMPTY_INTAKE);
+                intakePosition.request_state(IntakePositionModule.RequestStates.HOME);
+                this.currentState = ModuleStates.EMPTYING_INTAKE;
                 break;
 
             default:
             case CANCEL_INTAKE:
                 this.currentState = ModuleStates.EMPTY_HOME;
+                intakeRollers.request_state(IntakeRollersModule.RequestStates.STOP);
                 break;
 
         }
@@ -77,58 +91,50 @@ public class IntakeModule {
 
     public void update() {
 
-        switch (this.requestedState) {
-
-            case DEPLOY_INTAKE:
-
-                if (this.noteDetectors.get()) {
-
-                    this.currentState = ModuleStates.NOTE_WAITING;
-                    noteWaitTimer.reset();
-                    noteWaitTimer.start();
-
-                }
-                intakePosition.request_state(IntakePositionModule.RequestStates.DEPLOYED);
-                break;
-
-            case CANCEL_INTAKE:
-                break;
-
-            default:
-                break;
-
-        }
-
         switch (currentState) {
 
             case EMPTY_HOME:
-                intakeRollers.request_state(IntakeRollersModule.RequestStates.STOP);
-                intakePosition.request_state(IntakePositionModule.RequestStates.HOME);
+                /* Do nothing */
                 break;
 
             case INTAKING_NOTE:
-                intakeRollers.request_state(IntakeRollersModule.RequestStates.INTAKE_NOTE);
-                intakePosition.request_state(IntakePositionModule.RequestStates.DEPLOYED);
-                break;
+            /* Intake is down and running */
 
-            case NOTE_WAITING:
-                intakeRollers.request_state(IntakeRollersModule.RequestStates.STOP);
-                intakePosition.request_state(IntakePositionModule.RequestStates.HOME);
-                if (noteWaitTimer.hasElapsed(5)) {
-
-                    this.currentState = ModuleStates.ROLLER_RESETTING;
+                /* If we've picked up a note */
+                if (this.noteDetectors.get()) {                  
+                    /* Tell the intake module to store the note */
+                    request_state(RequestStates.STORE_NOTE);
 
                 }
+                
+                break;
+            
+            case STORING_NOTE:
+            /* A note has just been picked up, we're stopped the intake and request it go to the 
+             * home position. Wait until the intake position says its in the home position then 
+             * start the note positioning process
+             */
+                /* Once the intake position module tells us that its home */
+                if (intakePosition.get_state() == IntakePositionModule.ModuleStates.HOME)
+                {
+                    /* Store the note */
+                    intakeRollers.request_state(IntakeRollersModule.RequestStates.POSITION_NOTE);
+                    this.currentState = ModuleStates.READY_FOR_SHOT;
+                }
+                break;
+            
+            case READY_FOR_SHOT:
+                /* If we're ready for a shot we don't need to do anything, just wait until we're requested to shoot */
                 break;
 
-            case ROLLER_RESETTING:
-                intakeRollers.request_state(IntakeRollersModule.RequestStates.RESET);
-                this.currentState = ModuleStates.NOTE_FOUND;
-                break;
-
-            case NOTE_FOUND:
-                intakeRollers.request_state(IntakeRollersModule.RequestStates.POSITION_NOTE);
-                intakePosition.request_state(IntakePositionModule.RequestStates.HOME);
+            case EMPTYING_INTAKE:
+                /* The intake rollers will be in the emptying intake state until its empty then it will be in 
+                 * the stopped state
+                 */
+                if (intakeRollers.get_state() == IntakeRollersModule.ModuleStates.STOPPED)
+                {
+                    this.currentState = ModuleStates.EMPTY_HOME;
+                }
                 break;
 
         }
