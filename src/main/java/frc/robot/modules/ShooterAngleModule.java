@@ -123,6 +123,11 @@ public class ShooterAngleModule {
                 /* Get desired power */
                 this.angle_power = this.angle_pid_controller.calculate(this.angle_encoder.getPosition(), 0);
 
+                /* Apply Deadband */
+                if (this.angle_pid_controller.atSetpoint()) {
+                    this.angle_power = MathUtil.applyDeadband(this.angle_power, 0.1);
+                }
+
                 /* Limit power */
                 this.angle_power = MathUtil.clamp(this.angle_power, -0.4, 0.2);
 
