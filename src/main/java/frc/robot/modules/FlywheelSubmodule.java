@@ -42,8 +42,8 @@ public class FlywheelSubmodule {
     private static final double right_setpoint_speaker = 0.6;
     private static final double left_setpoint_speaker = -1;
 
-    private static final double right_setpoint_amp = 0.3;
-    private static final double left_setpoint_amp = -0.3;
+    private static final double right_setpoint_amp = 0.2;
+    private static final double left_setpoint_amp = -0.2;
 
     public double right_setpoint;
     public double left_setpoint;
@@ -53,9 +53,11 @@ public class FlywheelSubmodule {
         this.requestedState = RequestStates.STOP;
 
         this.right_flywheel_spark = new CANSparkMax(right_id, CANSparkLowLevel.MotorType.kBrushless);
+        this.right_flywheel_spark.setOpenLoopRampRate(1);
         this.right_encoder = this.right_flywheel_spark.getEncoder();
 
         this.left_flywheel_spark = new CANSparkMax(left_id, CANSparkLowLevel.MotorType.kBrushless);
+        this.left_flywheel_spark.setOpenLoopRampRate(1);
         this.left_encoder = this.left_flywheel_spark.getEncoder();
     }
 

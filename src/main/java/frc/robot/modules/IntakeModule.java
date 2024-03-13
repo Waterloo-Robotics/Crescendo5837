@@ -84,6 +84,7 @@ public class IntakeModule {
             case CANCEL_INTAKE:
                 this.currentState = ModuleStates.EMPTY_HOME;
                 intakeRollers.request_state(IntakeRollersModule.RequestStates.STOP);
+                intakePosition.request_state(IntakePositionModule.RequestStates.HOME);
                 break;
 
         }

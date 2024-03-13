@@ -46,6 +46,8 @@ public class ShooterAngleModule {
 
     public double desired_position;
 
+    public boolean home_found;
+
 
     public ShooterAngleModule(int pivot_can_id) {
         this.angle_spark = new CANSparkMax(pivot_can_id, MotorType.kBrushless);
@@ -64,6 +66,9 @@ public class ShooterAngleModule {
         this.angle_power = 0;
         this.desired_position = 0;
 
+        /* Initialize the module to not be homed */
+        this.home_found = false;
+
         this.currentState = ModuleStates.UNKNOWN;
         this.requestedState = RequestStates.HOME;
     }
@@ -77,12 +82,18 @@ public class ShooterAngleModule {
                 break;
 
             case AMP_ANGLE:
-                this.desired_position = 50;
-                this.currentState = ModuleStates.ANGLE_SETPOINT;
+                /* Only do the PID controller if the home has been found  */
+                if (this.home_found) {
+                    this.desired_position = 50;
+                    this.currentState = ModuleStates.ANGLE_SETPOINT;
+                }
                 break;
 
             case HOME:
-                this.currentState = ModuleStates.HOME;
+                /* Only do the PID controller if the home has been found  */
+                if (this.home_found) {
+                    this.currentState = ModuleStates.HOME;
+                }
                 break;
 
             default:
@@ -103,6 +114,7 @@ public class ShooterAngleModule {
 
                     /* Reset the encoder */
                     this.angle_encoder.setPosition(-20);
+                    this.home_found = true;
 
                     this.currentState = ModuleStates.HOME;
                 }
@@ -132,8 +144,15 @@ public class ShooterAngleModule {
                 this.angle_spark.set(this.angle_power);
 
                 break;
+            
+            case UNKNOWN:
+                /* If we don't know the state of the shooter angle, just stop the motor */
+                this.angle_spark.set(0);
+                break;
 
             default:
+                /* Something went wrong, stop the motor */
+                this.angle_spark.set(0);
                 break;
         }
     }

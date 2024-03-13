@@ -6,18 +6,12 @@ package frc.robot;
 
 import java.lang.constant.DirectMethodHandleDesc;
 
-import com.ctre.phoenix.led.CANdle;
-import com.revrobotics.CANSparkLowLevel.MotorType;
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.CANSparkBase.IdleMode;
-
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PneumaticHub;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -26,14 +20,10 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.modules.FlywheelSubmodule;
 import frc.robot.modules.IntakeModule;
-
-import com.revrobotics.CANSparkLowLevel.MotorType;
-import com.revrobotics.CANSparkLowLevel;
-import com.revrobotics.CANSparkMax;
-import frc.robot.modules.IntakeRollersModule;
 import frc.robot.modules.NoteTransferModule;
 import frc.robot.modules.ShooterAngleModule;
 import frc.robot.modules.SwerveBaseModule;
+import frc.robot.modules.ShooterAngleModule.RequestStates;
 import frc.robot.modules.SwerveBaseModule.DriveBaseStates;;
 
 /**
@@ -49,9 +39,8 @@ public class Robot extends TimedRobot {
 
     // Drive Controllers
     XboxController driver_controller = new XboxController(1);
-//    Joystick farmSim1 = new Joystick(4);
-//    Joystick farmSim2 = new Joystick(5);
-
+    Joystick farmSim1 = new Joystick(4);
+    Joystick farmSim2 = new Joystick(5);
 
     // PDH
     PowerDistribution pdh = new PowerDistribution();
@@ -111,6 +100,9 @@ public class Robot extends TimedRobot {
         SmartDashboard.putData("Auto choices", m_chooser);
 
         drivebase.current_state = DriveBaseStates.LOCK;
+
+        /* On robot init, dereference the shooter angle */
+        shooter_angle.home_found = false;
 
         publisher = NetworkTableInstance.getDefault().getStructArrayTopic("/SwerveStates", SwerveModuleState.struct).publish();
     }
@@ -173,6 +165,11 @@ public class Robot extends TimedRobot {
         m_autoSelected = m_chooser.getSelected();
         // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
         System.out.println("Auto selected: " + m_autoSelected);
+
+        /* If the shooter angle has not been homed, start the shooter angle in the homing sequence */
+        if (!shooter_angle.home_found) {
+            shooter_angle.request_state(RequestStates.FIND_HOME);
+        }
     }
 
     /**
@@ -194,11 +191,72 @@ public class Robot extends TimedRobot {
     /** This function is called once when teleop is enabled. */
     @Override
     public void teleopInit() {
+        pneumaticHub.enableCompressorAnalog(70, 110);
+
+        /* Put the robot into driver mode */
+        drivebase.current_state = DriveBaseStates.XBOX;
+
+        /* If the shooter angle has not been homed, start the shooter angle in the homing sequence */
+        if (!shooter_angle.home_found) {
+            shooter_angle.request_state(RequestStates.FIND_HOME);
+        }
     }
 
     /** This function is called periodically during operator control. */
     @Override
     public void teleopPeriodic() {
+
+        /* Home All */
+        /* Right Bumper on Driver Controller or 21 on Farm sim 
+         * A button on Driver Controller released - ie no long pressing shoot
+        */
+        if (xbox_controller.getRightBumperPressed() || farmSim2.getRawButtonPressed(5) || xbox_controller.getAButtonReleased()) {
+            intake.request_state(IntakeModule.RequestStates.CANCEL_INTAKE);
+            note_transfer.request_state(NoteTransferModule.RequestStates.STOP);
+            flywheels.request_state(FlywheelSubmodule.RequestStates.STOP);
+            shooter_angle.request_state(ShooterAngleModule.RequestStates.HOME);
+        }
+
+        /* Intake mode */
+        /* B on Driver Controller */
+        if (xbox_controller.getBButtonPressed()) {
+            intake.request_state(IntakeModule.RequestStates.DEPLOY_INTAKE);
+            note_transfer.request_state(NoteTransferModule.RequestStates.STOP);
+            flywheels.request_state(FlywheelSubmodule.RequestStates.STOP);
+            shooter_angle.request_state(ShooterAngleModule.RequestStates.HOME);
+        }
+
+        /* Amp Prepare */
+        /* 17 on Farm sim */
+        if (farmSim2.getRawButtonPressed(1)) {
+            note_transfer.request_state(NoteTransferModule.RequestStates.STOP);
+            flywheels.request_state(FlywheelSubmodule.RequestStates.SPIN_UP_AMP);
+            shooter_angle.request_state(ShooterAngleModule.RequestStates.AMP_ANGLE);
+        }
+
+        /* Speaker Prepare */
+        /* 18 on Farm sim */
+        if (farmSim2.getRawButtonPressed(2)) {
+            note_transfer.request_state(NoteTransferModule.RequestStates.STOP);
+            flywheels.request_state(FlywheelSubmodule.RequestStates.SPIN_UP_SPEAKER);
+            /* Just using Amp angle for now since its likely going to be the same thing we if aren't using the camera */
+            shooter_angle.request_state(ShooterAngleModule.RequestStates.AMP_ANGLE);
+        }
+
+        /* Shoot */
+        /* A on Driver Controller */
+        if (xbox_controller.getAButtonPressed()) {
+            intake.request_state(IntakeModule.RequestStates.SHOOT);
+            note_transfer.request_state(NoteTransferModule.RequestStates.SHOOT);
+            /* Don't modify the flywheel state */
+            /* Don't modify the shooter angle state */
+        }
+
+        drivebase.update();
+        intake.update();
+        flywheels.update();
+        note_transfer.update();
+        shooter_angle.update();
     }
 
     /** This function is called once when the robot is disabled. */
