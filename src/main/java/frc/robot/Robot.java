@@ -9,6 +9,7 @@ import java.lang.constant.DirectMethodHandleDesc;
 import com.ctre.phoenix.led.CANdle;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkBase.IdleMode;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -31,6 +32,7 @@ import com.revrobotics.CANSparkLowLevel;
 import com.revrobotics.CANSparkMax;
 import frc.robot.modules.IntakeRollersModule;
 import frc.robot.modules.NoteTransferModule;
+import frc.robot.modules.ShooterAngleModule;
 import frc.robot.modules.SwerveBaseModule;
 import frc.robot.modules.SwerveBaseModule.DriveBaseStates;;
 
@@ -58,9 +60,6 @@ public class Robot extends TimedRobot {
 
     SwerveBaseModule drivebase = new SwerveBaseModule(xbox_controller);
 
-    /* Shooter */
-    static CANSparkMax shooterAngleNeo550 = new CANSparkMax(25, MotorType.kBrushless);
-
     PneumaticHub pneumaticHub = new PneumaticHub(40);
 
     // CANdle led1 = new CANdle(45);
@@ -74,6 +73,9 @@ public class Robot extends TimedRobot {
 
     /* Create flywheel module */
     FlywheelSubmodule flywheels = new FlywheelSubmodule(20, 21);
+
+    /* Pivot module */
+    ShooterAngleModule shooter_angle = new ShooterAngleModule(25);
 
     // 2 limelights
     // double tx = LimelightHelpers.getTX("");
@@ -108,7 +110,7 @@ public class Robot extends TimedRobot {
         m_chooser.addOption("My Auto", kCustomAuto);
         SmartDashboard.putData("Auto choices", m_chooser);
 
-        drivebase.current_state = DriveBaseStates.XBOX;
+        drivebase.current_state = DriveBaseStates.LOCK;
 
         publisher = NetworkTableInstance.getDefault().getStructArrayTopic("/SwerveStates", SwerveModuleState.struct).publish();
     }
@@ -139,9 +141,13 @@ public class Robot extends TimedRobot {
         // SmartDashboard.putNumber("LimelightArea", area);
         // SmartDashboard.putNumber("LimelightTagID", tagID);
 
-        SmartDashboard.putString("Intake State", intake.get_state().toString());
-        SmartDashboard.putString("Intake Rollers State", intake.intakeRollers.get_state().toString());
-        SmartDashboard.putString("Intake Position State", intake.intakePosition.get_state().toString());
+        // SmartDashboard.putString("Intake State", intake.get_state().toString());
+        // SmartDashboard.putString("Intake Rollers State", intake.intakeRollers.get_state().toString());
+        // SmartDashboard.putString("Intake Position State", intake.intakePosition.get_state().toString());
+
+        SmartDashboard.putNumber("Angle Current", shooter_angle.angle_spark.getOutputCurrent());
+        SmartDashboard.putNumber("Position", shooter_angle.angle_encoder.getPosition());
+        SmartDashboard.putNumber("Power", shooter_angle.angle_spark.get());
 
     }
 
@@ -208,7 +214,9 @@ public class Robot extends TimedRobot {
     /** This function is called once when test mode is enabled. */
     @Override
     public void testInit() {
-        pneumaticHub.enableCompressorAnalog(70, 110);
+        // pneumaticHub.enableCompressorAnalog(70, 110);
+        pneumaticHub.disableCompressor();
+        shooter_angle.angle_encoder.setPosition(0);
     }
 
     /** This function is called periodically during test mode. */
@@ -216,44 +224,63 @@ public class Robot extends TimedRobot {
     public void testPeriodic() {
 
         SmartDashboard.putBoolean("A", driver_controller.getAButton());
-        if (driver_controller.getAButton()) {
-            SmartDashboard.putString("Button", "A");
-            intake.request_state(IntakeModule.RequestStates.DEPLOY_INTAKE);
-        } else if (driver_controller.getBButton()) {
-            SmartDashboard.putString("Button", "B");
-            intake.request_state(IntakeModule.RequestStates.CANCEL_INTAKE);
-        } else if (driver_controller.getYButton()) {
-            SmartDashboard.putString("Button", "Y");
-            intake.request_state(IntakeModule.RequestStates.EMPTY_INTAKE);
+        // if (driver_controller.getAButton()) {
+        //     SmartDashboard.putString("Button", "A");
+        //     intake.request_state(IntakeModule.RequestStates.DEPLOY_INTAKE);
+        // } else if (driver_controller.getBButton()) {
+        //     SmartDashboard.putString("Button", "B");
+        //     intake.request_state(IntakeModule.RequestStates.CANCEL_INTAKE);
+        // } else if (driver_controller.getYButton()) {
+        //     SmartDashboard.putString("Button", "Y");
+        //     intake.request_state(IntakeModule.RequestStates.EMPTY_INTAKE);
+        // }
+
+        // /* Up on dpad */
+        // if (driver_controller.getPOV() == 0) {
+        //     flywheels.request_state(FlywheelSubmodule.RequestStates.SPIN_UP_AMP);
+        // } 
+        // /* Right on dpad */
+        // else if (driver_controller.getPOV() == 90) {
+        //     flywheels.request_state(FlywheelSubmodule.RequestStates.SPIN_UP_SPEAKER);
+        // }
+        // /* Down on dpad */
+        // else if (driver_controller.getPOV() == 180) {
+        //     flywheels.request_state(FlywheelSubmodule.RequestStates.STOP);
+        // }
+
+        // if (driver_controller.getStartButtonPressed()) {
+        //     intake.request_state(IntakeModule.RequestStates.SHOOT);
+        //     note_transfer.request_state(NoteTransferModule.RequestStates.SHOOT);
+        // } else if (driver_controller.getStartButtonReleased()) {
+        //     intake.request_state(IntakeModule.RequestStates.CANCEL_INTAKE);
+        //     note_transfer.request_state(NoteTransferModule.RequestStates.STOP);
+        // }
+
+        // intake.update();
+        // /* Run drivebase */
+        // drivebase.update();
+        // note_transfer.update();
+        // flywheels.update();
+
+        shooter_angle.angle_spark.set(MathUtil.clamp(MathUtil.applyDeadband(xbox_controller.getLeftY(), 0.25), -0.1, 0.1));
+        
+        if (xbox_controller.getAButton()) {
+            shooter_angle.update();
+        } else {
+            shooter_angle.angle_spark.set(0);
         }
 
-        /* Up on dpad */
-        if (driver_controller.getPOV() == 0) {
-            flywheels.request_state(FlywheelSubmodule.RequestStates.SPIN_UP_AMP);
-        } 
-        /* Right on dpad */
-        else if (driver_controller.getPOV() == 90) {
-            flywheels.request_state(FlywheelSubmodule.RequestStates.SPIN_UP_SPEAKER);
-        }
-        /* Down on dpad */
-        else if (driver_controller.getPOV() == 180) {
-            flywheels.request_state(FlywheelSubmodule.RequestStates.STOP);
+        if (xbox_controller.getBButtonPressed()) {
+            shooter_angle.request_state(ShooterAngleModule.RequestStates.FIND_HOME);
         }
 
-        if (driver_controller.getStartButtonPressed()) {
-            intake.request_state(IntakeModule.RequestStates.SHOOT);
-            note_transfer.request_state(NoteTransferModule.RequestStates.SHOOT);
-        } else if (driver_controller.getStartButtonReleased()) {
-            intake.request_state(IntakeModule.RequestStates.CANCEL_INTAKE);
-            note_transfer.request_state(NoteTransferModule.RequestStates.STOP);
+        if (xbox_controller.getYButtonPressed()) {
+            shooter_angle.request_state(ShooterAngleModule.RequestStates.AMP_ANGLE);
         }
 
-        intake.update();
-        /* Run drivebase */
-        drivebase.update();
-        note_transfer.update();
-        flywheels.update();
-
+        if (xbox_controller.getXButtonPressed()) {
+            shooter_angle.request_state(ShooterAngleModule.RequestStates.HOME);
+        }
     }
 
     /** This function is called once when the robot is first started up. */
