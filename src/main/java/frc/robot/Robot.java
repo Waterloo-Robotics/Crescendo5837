@@ -38,16 +38,16 @@ import frc.robot.modules.SwerveBaseModule.DriveBaseStates;;
 public class Robot extends TimedRobot {
 
     // Drive Controllers
-    XboxController driver_controller = new XboxController(1);
-    Joystick farmSim1 = new Joystick(4);
-    Joystick farmSim2 = new Joystick(5);
+    // XboxController driver_controller = new XboxController(1);
+    Joystick driver_controller = new Joystick(2);
+   Joystick farmSim1 = new Joystick(4);
+   Joystick farmSim2 = new Joystick(5);
+
 
     // PDH
     PowerDistribution pdh = new PowerDistribution();
 
-    XboxController xbox_controller = new XboxController(1);
-
-    SwerveBaseModule drivebase = new SwerveBaseModule(xbox_controller);
+    SwerveBaseModule drivebase = new SwerveBaseModule(driver_controller);
 
     PneumaticHub pneumaticHub = new PneumaticHub(40);
 
@@ -99,7 +99,7 @@ public class Robot extends TimedRobot {
         m_chooser.addOption("My Auto", kCustomAuto);
         SmartDashboard.putData("Auto choices", m_chooser);
 
-        drivebase.current_state = DriveBaseStates.LOCK;
+        drivebase.current_state = DriveBaseStates.XBOX;
 
         /* On robot init, dereference the shooter angle */
         shooter_angle.home_found = false;
@@ -141,6 +141,7 @@ public class Robot extends TimedRobot {
         SmartDashboard.putNumber("Position", shooter_angle.angle_encoder.getPosition());
         SmartDashboard.putNumber("Power", shooter_angle.angle_spark.get());
 
+        SmartDashboard.putNumber("Drive Power", drivebase.modules[0].drive_spark.get());
     }
 
     /**
@@ -281,7 +282,6 @@ public class Robot extends TimedRobot {
     @Override
     public void testPeriodic() {
 
-        SmartDashboard.putBoolean("A", driver_controller.getAButton());
         // if (driver_controller.getAButton()) {
         //     SmartDashboard.putString("Button", "A");
         //     intake.request_state(IntakeModule.RequestStates.DEPLOY_INTAKE);
@@ -319,24 +319,7 @@ public class Robot extends TimedRobot {
         // drivebase.update();
         // note_transfer.update();
         // flywheels.update();
-        
-        if (xbox_controller.getAButton()) {
-            shooter_angle.update();
-        } else {
-            shooter_angle.angle_spark.set(0);
-        }
-
-        if (xbox_controller.getBButtonPressed()) {
-            shooter_angle.request_state(ShooterAngleModule.RequestStates.FIND_HOME);
-        }
-
-        if (xbox_controller.getYButtonPressed()) {
-            shooter_angle.request_state(ShooterAngleModule.RequestStates.AMP_ANGLE);
-        }
-
-        if (xbox_controller.getXButtonPressed()) {
-            shooter_angle.request_state(ShooterAngleModule.RequestStates.HOME);
-        }
+        drivebase.update();
     }
 
     /** This function is called once when the robot is first started up. */

@@ -9,6 +9,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -28,11 +29,11 @@ public class SwerveBaseModule {
 
     public DriveBaseStates current_state;
 
-    private XboxController input_controller;
+    private Joystick input_controller;
     private int lock_counter;
     private boolean lock;
 
-    public SwerveBaseModule(XboxController drive_controller) {
+    public SwerveBaseModule(Joystick drive_controller) {
         /* Create the four swerve modules passing in each corner's CAN ID */
         this.modules = new SwerveModule[] {
                 /* Front Left */
@@ -70,14 +71,14 @@ public class SwerveBaseModule {
 
     private void drive_xbox() {
         /* Get the inputs from the controller */
-        double x = input_controller.getLeftY();
-        double y = input_controller.getLeftX();
-        double rotation = input_controller.getRightX();
+        double x = Math.pow(input_controller.getY(), 2) * Math.signum(input_controller.getY());
+        double y = Math.pow(input_controller.getX(), 2) * Math.signum(input_controller.getX());
+        double rotation = Math.pow(input_controller.getRawAxis(5), 2) * Math.signum(input_controller.getRawAxis(5));
 
         /* Apply a deadband to prevent stick drift */
-        x = MathUtil.applyDeadband(x, 0.25);
-        y = MathUtil.applyDeadband(y, 0.25);
-        rotation = MathUtil.applyDeadband(rotation, 0.2);
+        x = MathUtil.applyDeadband(x, 0.05, 1);
+        y = MathUtil.applyDeadband(y, 0.05, 1);
+        rotation = MathUtil.applyDeadband(rotation, 0.1, 1);
 
         /* If no inputs are present, lock the drivebase */
         if (Math.abs(x) + Math.abs(y) + Math.abs(rotation) < 0.05) {
@@ -96,9 +97,12 @@ public class SwerveBaseModule {
 
         if (!lock) {
             /* Multiply each by max velocity to get desired velocity in each direction */
-            double x_velocity_m_s = x * Units.feetToMeters(1);
-            double y_velocity_m_s = y * Units.feetToMeters(1);
-            double rotational_vel = rotation * 2;
+            double x_velocity_m_s = x * Units.feetToMeters(16);
+            double y_velocity_m_s = y * Units.feetToMeters(16);
+            double rotational_vel = rotation * 5;
+
+            SmartDashboard.putNumber("x", x);
+            SmartDashboard.putNumber("y", y);
 
             /*
             * Convert velocity in each axis to a general chassis velocity then use the
@@ -116,10 +120,10 @@ public class SwerveBaseModule {
 
     private void straight() {
         SwerveModuleState[] states = {
-                new SwerveModuleState(input_controller.getLeftY()*0.1, Rotation2d.fromDegrees(0)),
-                new SwerveModuleState(input_controller.getLeftY()*0.1, Rotation2d.fromDegrees(0)),
-                new SwerveModuleState(input_controller.getLeftY()*0.1, Rotation2d.fromDegrees(0)),
-                new SwerveModuleState(input_controller.getLeftY()*0.1, Rotation2d.fromDegrees(0))
+                new SwerveModuleState(input_controller.getY()*0.1, Rotation2d.fromDegrees(0)),
+                new SwerveModuleState(input_controller.getY()*0.1, Rotation2d.fromDegrees(0)),
+                new SwerveModuleState(input_controller.getY()*0.1, Rotation2d.fromDegrees(0)),
+                new SwerveModuleState(input_controller.getY()*0.1, Rotation2d.fromDegrees(0))
         };
         setModuleStates(states);
     }
@@ -134,8 +138,8 @@ public class SwerveBaseModule {
     private void test_steer() {
         /* The goal of this function is to set every swerve module to the same angle */
         /* Get the inputs from the controller */
-        double x = input_controller.getLeftX();
-        double y = input_controller.getLeftY();
+        double x = input_controller.getX();
+        double y = input_controller.getY();
 
         /* Apply a deadband to prevent stick drift */
         x = MathUtil.applyDeadband(x, 0.1);
