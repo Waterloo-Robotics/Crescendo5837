@@ -261,8 +261,6 @@ public class Robot extends TimedRobot {
         // drivebase.update();
         // note_transfer.update();
         // flywheels.update();
-
-        shooter_angle.angle_spark.set(MathUtil.clamp(MathUtil.applyDeadband(xbox_controller.getLeftY(), 0.25), -0.1, 0.1));
         
         if (xbox_controller.getAButton()) {
             shooter_angle.update();
