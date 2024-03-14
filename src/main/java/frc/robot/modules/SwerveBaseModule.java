@@ -36,6 +36,8 @@ public class SwerveBaseModule {
 
     public AHRS gyro;
 
+    private double max_drive_speed;
+
     public SwerveBaseModule(Joystick drive_controller) {
         /* Create the four swerve modules passing in each corner's CAN ID */
         this.modules = new SwerveModule[] {
@@ -56,6 +58,8 @@ public class SwerveBaseModule {
         positions[3] = modules[3].get_module_position();
 
         this.gyro = new AHRS(SPI.Port.kMXP); 
+
+        this.max_drive_speed = 1 * Units.feetToMeters(16);
 
         input_controller = drive_controller;
         lock_counter = 0;
@@ -84,7 +88,7 @@ public class SwerveBaseModule {
         double min_drive = 0.3;
 
         double max_rot = 1;
-        double min_rot = 0.5;
+        double min_rot = 0.3;
 
         double drive_speed_multiplier = ((1 - input_controller.getRawAxis(2)) / 2) * (max_drive - min_drive) + min_drive;
         double rotation_speed_multiplier = ((1 - input_controller.getRawAxis(2)) / 2) * (max_rot - min_rot) + min_rot;
@@ -117,8 +121,9 @@ public class SwerveBaseModule {
             double y_velocity_m_s = y * Units.feetToMeters(16) * drive_speed_multiplier;
             double rotational_vel = rotation * 5 * rotation_speed_multiplier;
 
-            SmartDashboard.putNumber("x", x);
-            SmartDashboard.putNumber("y", y);
+            /* Limit to max drive speeds */
+            x_velocity_m_s = MathUtil.clamp(x_velocity_m_s, -this.max_drive_speed, this.max_drive_speed);
+            y_velocity_m_s = MathUtil.clamp(y_velocity_m_s, -this.max_drive_speed, this.max_drive_speed);
 
             /*
             * Convert velocity in each axis to a general chassis velocity then use the
@@ -200,6 +205,10 @@ public class SwerveBaseModule {
         for (int i = 0; i < 4; i++) {
             modules[i].set_module_state(states[i]);
         }
+    }
+
+    public void set_max_drive_speed(double max) {
+        this.max_drive_speed = Math.abs(max) * Units.feetToMeters(16);
     }
 
     public enum DriveBaseStates {

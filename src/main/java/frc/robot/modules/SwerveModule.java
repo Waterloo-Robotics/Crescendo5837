@@ -34,6 +34,8 @@ public class SwerveModule {
         drive_spark = new CANSparkMax(drive_id, MotorType.kBrushless);
         drive_spark.setInverted(reverse_drive);
         drive_spark.setIdleMode(CANSparkMax.IdleMode.kBrake);
+        /* By limiting the ramp rate to 0.5 seconds the peak current goes down from 120A to 80A */
+        drive_spark.setOpenLoopRampRate(0.5);
 
         drive_encoder = drive_spark.getEncoder();
 

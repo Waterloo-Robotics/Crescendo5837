@@ -33,11 +33,11 @@ public class FlywheelSubmodule {
 
     public final ModuleStates initalState = ModuleStates.STOPPED;
 
-    CANSparkMax right_flywheel_spark;
-    RelativeEncoder right_encoder;
+    public CANSparkMax right_flywheel_spark;
+    public RelativeEncoder right_encoder;
 
-    CANSparkMax left_flywheel_spark;
-    RelativeEncoder left_encoder;
+    public CANSparkMax left_flywheel_spark;
+    public RelativeEncoder left_encoder;
 
     private static final double right_setpoint_speaker = 0.6;
     private static final double left_setpoint_speaker = -1;

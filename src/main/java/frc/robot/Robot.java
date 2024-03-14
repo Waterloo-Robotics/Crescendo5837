@@ -135,14 +135,13 @@ public class Robot extends TimedRobot {
         // SmartDashboard.putNumber("LimelightArea", area);
         // SmartDashboard.putNumber("LimelightTagID", tagID);
 
-        // SmartDashboard.putString("Intake State", intake.get_state().toString());
-        // SmartDashboard.putString("Intake Rollers State", intake.intakeRollers.get_state().toString());
-        // SmartDashboard.putString("Intake Position State", intake.intakePosition.get_state().toString());
+        SmartDashboard.putNumber("Flywheel R", flywheels.right_flywheel_spark.getOutputCurrent());
+        SmartDashboard.putNumber("Flywheel L", flywheels.left_flywheel_spark.getOutputCurrent());
 
-        SmartDashboard.putNumber("Yaw", drivebase.gyro.getYaw());
-        SmartDashboard.putNumber("Pitch", drivebase.gyro.getPitch());
-        SmartDashboard.putNumber("Roll", drivebase.gyro.getRoll());
+        SmartDashboard.putNumber("Transfer", note_transfer.transfer_spark.getOutputCurrent());
+        SmartDashboard.putNumber("Intake", intake.intakeRollers.intakeRollerMotor.getOutputCurrent());
 
+        SmartDashboard.putNumber("Total Current", pdh.getTotalCurrent());
     }
 
     /**
@@ -213,6 +212,8 @@ public class Robot extends TimedRobot {
          * 1 on Driver Controller released - ie no long pressing shoot
         */
         if (driver_controller.getRawButtonPressed(2) || farmSim2.getRawButtonPressed(5) || driver_controller.getRawButtonReleased(1)) {
+            /* Remove limit on drivebase speed */
+            drivebase.set_max_drive_speed(1);
             intake.request_state(IntakeModule.RequestStates.CANCEL_INTAKE);
             note_transfer.request_state(NoteTransferModule.RequestStates.STOP);
             flywheels.request_state(FlywheelSubmodule.RequestStates.STOP);
@@ -220,8 +221,8 @@ public class Robot extends TimedRobot {
         }
 
         /* Intake mode */
-        /* 4 on Driver Controller */
-        if (driver_controller.getRawButtonPressed(4)) {
+        /* 7 on Driver Controller */
+        if (driver_controller.getRawButtonPressed(7)) {
             intake.request_state(IntakeModule.RequestStates.DEPLOY_INTAKE);
             note_transfer.request_state(NoteTransferModule.RequestStates.STOP);
             flywheels.request_state(FlywheelSubmodule.RequestStates.STOP);
@@ -231,6 +232,8 @@ public class Robot extends TimedRobot {
         /* Amp Prepare */
         /* 17 on Farm sim */
         if (farmSim2.getRawButtonPressed(1)) {
+            /* Limit drivebase speed while flywheels are running */
+            drivebase.set_max_drive_speed(0.5);
             note_transfer.request_state(NoteTransferModule.RequestStates.STOP);
             flywheels.request_state(FlywheelSubmodule.RequestStates.SPIN_UP_AMP);
             shooter_angle.request_state(ShooterAngleModule.RequestStates.AMP_ANGLE);
@@ -239,6 +242,8 @@ public class Robot extends TimedRobot {
         /* Speaker Prepare */
         /* 18 on Farm sim */
         if (farmSim2.getRawButtonPressed(2)) {
+            /* Limit drivebase speed while flywheels are running */
+            drivebase.set_max_drive_speed(0.3);
             note_transfer.request_state(NoteTransferModule.RequestStates.STOP);
             flywheels.request_state(FlywheelSubmodule.RequestStates.SPIN_UP_SPEAKER);
             /* Just using Amp angle for now since its likely going to be the same thing we if aren't using the camera */
