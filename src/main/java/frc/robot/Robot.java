@@ -40,8 +40,8 @@ public class Robot extends TimedRobot {
     // Drive Controllers
     // XboxController driver_controller = new XboxController(1);
     Joystick driver_controller = new Joystick(2);
-   Joystick farmSim1 = new Joystick(4);
-   Joystick farmSim2 = new Joystick(5);
+    Joystick farmSim1 = new Joystick(4);
+    Joystick farmSim2 = new Joystick(5);
 
 
     // PDH
@@ -104,6 +104,8 @@ public class Robot extends TimedRobot {
         /* On robot init, dereference the shooter angle */
         shooter_angle.home_found = false;
 
+        drivebase.gyro.reset();
+
         publisher = NetworkTableInstance.getDefault().getStructArrayTopic("/SwerveStates", SwerveModuleState.struct).publish();
     }
 
@@ -137,11 +139,10 @@ public class Robot extends TimedRobot {
         // SmartDashboard.putString("Intake Rollers State", intake.intakeRollers.get_state().toString());
         // SmartDashboard.putString("Intake Position State", intake.intakePosition.get_state().toString());
 
-        SmartDashboard.putNumber("Angle Current", shooter_angle.angle_spark.getOutputCurrent());
-        SmartDashboard.putNumber("Position", shooter_angle.angle_encoder.getPosition());
-        SmartDashboard.putNumber("Power", shooter_angle.angle_spark.get());
+        SmartDashboard.putNumber("Yaw", drivebase.gyro.getYaw());
+        SmartDashboard.putNumber("Pitch", drivebase.gyro.getPitch());
+        SmartDashboard.putNumber("Roll", drivebase.gyro.getRoll());
 
-        SmartDashboard.putNumber("Drive Power", drivebase.modules[0].drive_spark.get());
     }
 
     /**
@@ -208,10 +209,10 @@ public class Robot extends TimedRobot {
     public void teleopPeriodic() {
 
         /* Home All */
-        /* Right Bumper on Driver Controller or 21 on Farm sim 
-         * A button on Driver Controller released - ie no long pressing shoot
+        /* 2 on Driver Controller or 21 on Farm sim 
+         * 1 on Driver Controller released - ie no long pressing shoot
         */
-        if (xbox_controller.getRightBumperPressed() || farmSim2.getRawButtonPressed(5) || xbox_controller.getAButtonReleased()) {
+        if (driver_controller.getRawButtonPressed(2) || farmSim2.getRawButtonPressed(5) || driver_controller.getRawButtonReleased(1)) {
             intake.request_state(IntakeModule.RequestStates.CANCEL_INTAKE);
             note_transfer.request_state(NoteTransferModule.RequestStates.STOP);
             flywheels.request_state(FlywheelSubmodule.RequestStates.STOP);
@@ -219,8 +220,8 @@ public class Robot extends TimedRobot {
         }
 
         /* Intake mode */
-        /* B on Driver Controller */
-        if (xbox_controller.getBButtonPressed()) {
+        /* 4 on Driver Controller */
+        if (driver_controller.getRawButtonPressed(4)) {
             intake.request_state(IntakeModule.RequestStates.DEPLOY_INTAKE);
             note_transfer.request_state(NoteTransferModule.RequestStates.STOP);
             flywheels.request_state(FlywheelSubmodule.RequestStates.STOP);
@@ -246,7 +247,7 @@ public class Robot extends TimedRobot {
 
         /* Shoot */
         /* A on Driver Controller */
-        if (xbox_controller.getAButtonPressed()) {
+        if (driver_controller.getRawButtonPressed(1)) {
             intake.request_state(IntakeModule.RequestStates.SHOOT);
             note_transfer.request_state(NoteTransferModule.RequestStates.SHOOT);
             /* Don't modify the flywheel state */

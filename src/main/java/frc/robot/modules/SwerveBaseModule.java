@@ -10,8 +10,9 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import com.kauailabs.navx.frc.AHRS;
 
 public class SwerveBaseModule {
     public SwerveModule[] modules;
@@ -33,6 +34,8 @@ public class SwerveBaseModule {
     private int lock_counter;
     private boolean lock;
 
+    public AHRS gyro;
+
     public SwerveBaseModule(Joystick drive_controller) {
         /* Create the four swerve modules passing in each corner's CAN ID */
         this.modules = new SwerveModule[] {
@@ -51,6 +54,8 @@ public class SwerveBaseModule {
         positions[1] = modules[1].get_module_position();
         positions[2] = modules[2].get_module_position();
         positions[3] = modules[3].get_module_position();
+
+        this.gyro = new AHRS(SPI.Port.kMXP); 
 
         input_controller = drive_controller;
         lock_counter = 0;
@@ -75,6 +80,17 @@ public class SwerveBaseModule {
         double y = Math.pow(input_controller.getX(), 2) * Math.signum(input_controller.getX());
         double rotation = Math.pow(input_controller.getRawAxis(5), 2) * Math.signum(input_controller.getRawAxis(5));
 
+        double max_drive = 1;
+        double min_drive = 0.3;
+
+        double max_rot = 1;
+        double min_rot = 0.5;
+
+        double drive_speed_multiplier = ((1 - input_controller.getRawAxis(2)) / 2) * (max_drive - min_drive) + min_drive;
+        double rotation_speed_multiplier = ((1 - input_controller.getRawAxis(2)) / 2) * (max_rot - min_rot) + min_rot;
+
+        SmartDashboard.putNumber("Drive Multiplier", drive_speed_multiplier);
+
         /* Apply a deadband to prevent stick drift */
         x = MathUtil.applyDeadband(x, 0.05, 1);
         y = MathUtil.applyDeadband(y, 0.05, 1);
@@ -97,9 +113,9 @@ public class SwerveBaseModule {
 
         if (!lock) {
             /* Multiply each by max velocity to get desired velocity in each direction */
-            double x_velocity_m_s = x * Units.feetToMeters(16);
-            double y_velocity_m_s = y * Units.feetToMeters(16);
-            double rotational_vel = rotation * 5;
+            double x_velocity_m_s = x * Units.feetToMeters(16) * drive_speed_multiplier;
+            double y_velocity_m_s = y * Units.feetToMeters(16) * drive_speed_multiplier;
+            double rotational_vel = rotation * 5 * rotation_speed_multiplier;
 
             SmartDashboard.putNumber("x", x);
             SmartDashboard.putNumber("y", y);
@@ -110,6 +126,7 @@ public class SwerveBaseModule {
             * "states" ie rotation and drive velocity.
             */
             ChassisSpeeds speeds = new ChassisSpeeds(x_velocity_m_s, y_velocity_m_s, rotational_vel);
+            speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, gyro.getRotation2d());
             SwerveModuleState[] states = kinematics.toSwerveModuleStates(speeds);
 
             /* Send the new states to each swerve module */

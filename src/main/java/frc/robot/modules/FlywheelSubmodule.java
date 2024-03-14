@@ -42,8 +42,8 @@ public class FlywheelSubmodule {
     private static final double right_setpoint_speaker = 0.6;
     private static final double left_setpoint_speaker = -1;
 
-    private static final double right_setpoint_amp = 0.2;
-    private static final double left_setpoint_amp = -0.2;
+    private static final double right_setpoint_amp = 0.10;
+    private static final double left_setpoint_amp = -0.10;
 
     public double right_setpoint;
     public double left_setpoint;
