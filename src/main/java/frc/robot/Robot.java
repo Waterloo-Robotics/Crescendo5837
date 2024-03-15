@@ -39,7 +39,7 @@ public class Robot extends TimedRobot {
 
     // Drive Controllers
     // XboxController driver_controller = new XboxController(1);
-    Joystick driver_controller = new Joystick(2);
+    XboxController driver_controller = new XboxController(2);
     Joystick farmSim1 = new Joystick(4);
     Joystick farmSim2 = new Joystick(5);
 
@@ -211,7 +211,7 @@ public class Robot extends TimedRobot {
         /* 2 on Driver Controller or 21 on Farm sim 
          * 1 on Driver Controller released - ie no long pressing shoot
         */
-        if (driver_controller.getRawButtonPressed(2) || farmSim2.getRawButtonPressed(5) || driver_controller.getRawButtonReleased(1)) {
+        if (driver_controller.getYButton() || farmSim2.getRawButtonPressed(5) || driver_controller.getAButtonReleased()) {
             /* Remove limit on drivebase speed */
             drivebase.set_max_drive_speed(1);
             intake.request_state(IntakeModule.RequestStates.CANCEL_INTAKE);
@@ -222,7 +222,7 @@ public class Robot extends TimedRobot {
 
         /* Intake mode */
         /* 7 on Driver Controller */
-        if (driver_controller.getRawButtonPressed(7)) {
+        if (driver_controller.getLeftTriggerAxis() > 0.5) {
             intake.request_state(IntakeModule.RequestStates.DEPLOY_INTAKE);
             note_transfer.request_state(NoteTransferModule.RequestStates.STOP);
             flywheels.request_state(FlywheelSubmodule.RequestStates.STOP);
@@ -252,7 +252,7 @@ public class Robot extends TimedRobot {
 
         /* Shoot */
         /* A on Driver Controller */
-        if (driver_controller.getRawButtonPressed(1)) {
+        if (driver_controller.getRightTriggerAxis() > 0.5) {
             intake.request_state(IntakeModule.RequestStates.SHOOT);
             note_transfer.request_state(NoteTransferModule.RequestStates.SHOOT);
             /* Don't modify the flywheel state */

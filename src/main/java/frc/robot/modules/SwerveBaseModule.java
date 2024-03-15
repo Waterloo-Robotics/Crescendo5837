@@ -11,6 +11,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import com.kauailabs.navx.frc.AHRS;
 
@@ -30,7 +31,7 @@ public class SwerveBaseModule {
 
     public DriveBaseStates current_state;
 
-    private Joystick input_controller;
+    private XboxController input_controller;
     private int lock_counter;
     private boolean lock;
 
@@ -38,7 +39,7 @@ public class SwerveBaseModule {
 
     private double max_drive_speed;
 
-    public SwerveBaseModule(Joystick drive_controller) {
+    public SwerveBaseModule(XboxController drive_controller) {
         /* Create the four swerve modules passing in each corner's CAN ID */
         this.modules = new SwerveModule[] {
                 /* Front Left */
@@ -80,9 +81,9 @@ public class SwerveBaseModule {
 
     private void drive_xbox() {
         /* Get the inputs from the controller */
-        double x = Math.pow(input_controller.getY(), 2) * Math.signum(input_controller.getY());
-        double y = Math.pow(input_controller.getX(), 2) * Math.signum(input_controller.getX());
-        double rotation = Math.pow(input_controller.getRawAxis(5), 2) * Math.signum(input_controller.getRawAxis(5));
+        double x = Math.pow(input_controller.getLeftY(), 2) * Math.signum(input_controller.getLeftY());
+        double y = Math.pow(input_controller.getLeftX(), 2) * Math.signum(input_controller.getLeftX());
+        double rotation = Math.pow(input_controller.getRightX(), 2) * Math.signum(input_controller.getRightX());
 
         double max_drive = 1;
         double min_drive = 0.3;
@@ -90,18 +91,18 @@ public class SwerveBaseModule {
         double max_rot = 1;
         double min_rot = 0.3;
 
-        double drive_speed_multiplier = ((1 - input_controller.getRawAxis(2)) / 2) * (max_drive - min_drive) + min_drive;
-        double rotation_speed_multiplier = ((1 - input_controller.getRawAxis(2)) / 2) * (max_rot - min_rot) + min_rot;
+        double drive_speed_multiplier = 1;
+        double rotation_speed_multiplier = 1;
 
         SmartDashboard.putNumber("Drive Multiplier", drive_speed_multiplier);
 
         /* Apply a deadband to prevent stick drift */
-        x = MathUtil.applyDeadband(x, 0.05, 1);
-        y = MathUtil.applyDeadband(y, 0.05, 1);
-        rotation = MathUtil.applyDeadband(rotation, 0.1, 1);
+        x = MathUtil.applyDeadband(x, 0.15, 1);
+        y = MathUtil.applyDeadband(y, 0.15, 1);
+        rotation = MathUtil.applyDeadband(rotation, 0.2, 1);
 
         /* If no inputs are present, lock the drivebase */
-        if (Math.abs(x) + Math.abs(y) + Math.abs(rotation) < 0.05) {
+        if (Math.abs(x) + Math.abs(y) + Math.abs(rotation) < 0.15) {
             if (lock) {
                 lock();
             } else if (lock_counter > 50) {
@@ -142,10 +143,10 @@ public class SwerveBaseModule {
 
     private void straight() {
         SwerveModuleState[] states = {
-                new SwerveModuleState(input_controller.getY()*0.1, Rotation2d.fromDegrees(0)),
-                new SwerveModuleState(input_controller.getY()*0.1, Rotation2d.fromDegrees(0)),
-                new SwerveModuleState(input_controller.getY()*0.1, Rotation2d.fromDegrees(0)),
-                new SwerveModuleState(input_controller.getY()*0.1, Rotation2d.fromDegrees(0))
+                new SwerveModuleState(input_controller.getLeftY()*0.1, Rotation2d.fromDegrees(0)),
+                new SwerveModuleState(input_controller.getLeftY()*0.1, Rotation2d.fromDegrees(0)),
+                new SwerveModuleState(input_controller.getLeftY()*0.1, Rotation2d.fromDegrees(0)),
+                new SwerveModuleState(input_controller.getLeftY()*0.1, Rotation2d.fromDegrees(0))
         };
         setModuleStates(states);
     }
@@ -160,8 +161,8 @@ public class SwerveBaseModule {
     private void test_steer() {
         /* The goal of this function is to set every swerve module to the same angle */
         /* Get the inputs from the controller */
-        double x = input_controller.getX();
-        double y = input_controller.getY();
+        double x = input_controller.getLeftY();
+        double y = input_controller.getLeftY();
 
         /* Apply a deadband to prevent stick drift */
         x = MathUtil.applyDeadband(x, 0.1);
