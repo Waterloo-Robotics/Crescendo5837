@@ -23,6 +23,7 @@ public class ShooterAngleModule {
         FIND_HOME,
         HOME,
         AMP_ANGLE,
+        SPEAKER_FAR,
         ANGLE_SETPOINT;
     }
 
@@ -85,6 +86,13 @@ public class ShooterAngleModule {
                 /* Only do the PID controller if the home has been found  */
                 if (this.home_found) {
                     this.desired_position = 55;
+                    this.currentState = ModuleStates.ANGLE_SETPOINT;
+                }
+                break;
+            case SPEAKER_FAR:
+                /* Only do the PID controller if the home has been found  */
+                if (this.home_found) {
+                    this.desired_position = 30;
                     this.currentState = ModuleStates.ANGLE_SETPOINT;
                 }
                 break;
