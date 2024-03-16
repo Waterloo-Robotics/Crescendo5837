@@ -39,7 +39,7 @@ public class FlywheelSubmodule {
     public CANSparkMax left_flywheel_spark;
     public RelativeEncoder left_encoder;
 
-    private static final double right_setpoint_speaker = 0.6;
+    private static final double right_setpoint_speaker = 1;
     private static final double left_setpoint_speaker = -1;
 
     private static final double right_setpoint_amp = 0.10;

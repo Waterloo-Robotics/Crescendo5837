@@ -250,6 +250,17 @@ public class Robot extends TimedRobot {
             shooter_angle.request_state(ShooterAngleModule.RequestStates.AMP_ANGLE);
         }
 
+        /* Speaker Prepare */
+        /* 20 on Farm sim */
+        if (farmSim2.getRawButtonPressed(4)) {
+            /* Limit drivebase speed while flywheels are running */
+            drivebase.set_max_drive_speed(0.3);
+            note_transfer.request_state(NoteTransferModule.RequestStates.STOP);
+            flywheels.request_state(FlywheelSubmodule.RequestStates.SPIN_UP_SPEAKER);
+            /* Just using Amp angle for now since its likely going to be the same thing we if aren't using the camera */
+            shooter_angle.request_state(ShooterAngleModule.RequestStates.SPEAKER_FAR);
+        }
+
         /* Shoot */
         /* A on Driver Controller */
         if (driver_controller.getRightTriggerAxis() > 0.5) {
