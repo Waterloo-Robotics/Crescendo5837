@@ -81,9 +81,9 @@ public class SwerveBaseModule {
 
     private void drive_xbox() {
         /* Get the inputs from the controller */
-        double x = Math.pow(input_controller.getLeftY(), 2) * Math.signum(input_controller.getLeftY());
-        double y = Math.pow(input_controller.getLeftX(), 2) * Math.signum(input_controller.getLeftX());
-        double rotation = Math.pow(input_controller.getRightX(), 2) * Math.signum(input_controller.getRightX());
+        double x = Math.pow(input_controller.getRightY(), 2) * Math.signum(input_controller.getRightY());
+        double y = Math.pow(input_controller.getRightX(), 2) * Math.signum(input_controller.getRightX());
+        double rotation = Math.pow(input_controller.getLeftX(), 2) * Math.signum(input_controller.getLeftX());
 
         double max_drive = 1;
         double min_drive = 0.3;
@@ -120,7 +120,7 @@ public class SwerveBaseModule {
             /* Multiply each by max velocity to get desired velocity in each direction */
             double x_velocity_m_s = x * Units.feetToMeters(16) * drive_speed_multiplier;
             double y_velocity_m_s = y * Units.feetToMeters(16) * drive_speed_multiplier;
-            double rotational_vel = rotation * 5 * rotation_speed_multiplier;
+            double rotational_vel = rotation * 3 * rotation_speed_multiplier;
 
             /* Limit to max drive speeds */
             x_velocity_m_s = MathUtil.clamp(x_velocity_m_s, -this.max_drive_speed, this.max_drive_speed);

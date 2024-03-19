@@ -84,6 +84,8 @@ public class Robot extends TimedRobot {
     private String m_autoSelected;
     private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
+    double last_shoot_trigger;
+
     double angle;
 
     private StructArrayPublisher<SwerveModuleState> publisher;
@@ -105,6 +107,8 @@ public class Robot extends TimedRobot {
         shooter_angle.home_found = false;
 
         drivebase.gyro.reset();
+
+        last_shoot_trigger = 0;
 
         publisher = NetworkTableInstance.getDefault().getStructArrayTopic("/SwerveStates", SwerveModuleState.struct).publish();
     }
@@ -211,7 +215,8 @@ public class Robot extends TimedRobot {
         /* 2 on Driver Controller or 21 on Farm sim 
          * 1 on Driver Controller released - ie no long pressing shoot
         */
-        if (driver_controller.getYButton() || farmSim2.getRawButtonPressed(5) || driver_controller.getAButtonReleased()) {
+        if (driver_controller.getYButton() || farmSim2.getRawButtonPressed(5) || 
+            (driver_controller.getRightTriggerAxis() < 0.5 && last_shoot_trigger >= 0.5)) {
             /* Remove limit on drivebase speed */
             drivebase.set_max_drive_speed(1);
             intake.request_state(IntakeModule.RequestStates.CANCEL_INTAKE);
@@ -222,7 +227,7 @@ public class Robot extends TimedRobot {
 
         /* Intake mode */
         /* 7 on Driver Controller */
-        if (driver_controller.getLeftTriggerAxis() > 0.5) {
+        if (driver_controller.getLeftTriggerAxis() > 0.5 || farmSim1.getRawButtonPressed(15)) {
             intake.request_state(IntakeModule.RequestStates.DEPLOY_INTAKE);
             note_transfer.request_state(NoteTransferModule.RequestStates.STOP);
             flywheels.request_state(FlywheelSubmodule.RequestStates.STOP);
@@ -263,12 +268,14 @@ public class Robot extends TimedRobot {
 
         /* Shoot */
         /* A on Driver Controller */
-        if (driver_controller.getRightTriggerAxis() > 0.5) {
+        if (driver_controller.getRightTriggerAxis() > 0.5 && last_shoot_trigger <= 0.5) {
             intake.request_state(IntakeModule.RequestStates.SHOOT);
             note_transfer.request_state(NoteTransferModule.RequestStates.SHOOT);
             /* Don't modify the flywheel state */
             /* Don't modify the shooter angle state */
         }
+
+        last_shoot_trigger = driver_controller.getRightTriggerAxis();
 
         drivebase.update();
         intake.update();

@@ -87,14 +87,12 @@ public class IntakeRollersModule {
             case POSITION_NOTE:
                 this.currentState = ModuleStates.POSITIONING_NOTE;
                 this.intakeRollerMotor.getEncoder().setPosition(0);
-                this.intakeRollerPID.setSetpoint(150);
+                this.intakeRollerPID.setSetpoint(230);
                 break;
 
             case EMPTY_INTAKE:
-                SmartDashboard.putString("Empty Intake", "1");
                 this.currentState = ModuleStates.EMPTYING_INTAKE;
                 this.roller_timer.restart();
-                SmartDashboard.putString("Empty Intake", "2");
                 break;
             
             case TRANSFER_NOTE:
