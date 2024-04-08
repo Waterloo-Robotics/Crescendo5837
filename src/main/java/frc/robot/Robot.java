@@ -11,11 +11,7 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
-import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.PneumaticHub;
-import edu.wpi.first.wpilibj.PowerDistribution;
-import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.modules.FlywheelSubmodule;
@@ -24,6 +20,7 @@ import frc.robot.modules.NoteTransferModule;
 import frc.robot.modules.ShooterAngleModule;
 import frc.robot.modules.SwerveBaseModule;
 import frc.robot.modules.ShooterAngleModule.RequestStates;
+import frc.robot.modules.ShooterModule;
 import frc.robot.modules.SwerveBaseModule.DriveBaseStates;;
 
 /**
@@ -40,8 +37,8 @@ public class Robot extends TimedRobot {
     // Drive Controllers
     // XboxController driver_controller = new XboxController(1);
     XboxController driver_controller = new XboxController(2);
-    Joystick farmSim1 = new Joystick(4);
-    Joystick farmSim2 = new Joystick(5);
+    Joystick farmSim1 = new Joystick(0);
+    // Joystick farmSim2 = new Joystick(5);
 
 
     // PDH
@@ -88,6 +85,8 @@ public class Robot extends TimedRobot {
 
     double angle;
 
+    Timer autoTimer = new Timer();
+
     private StructArrayPublisher<SwerveModuleState> publisher;
 
     /**
@@ -97,8 +96,8 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotInit() {
-        m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
-        m_chooser.addOption("My Auto", kCustomAuto);
+        m_chooser.setDefaultOption("Do Nothing", kDefaultAuto);
+        m_chooser.addOption("Do Stuff", kCustomAuto);
         SmartDashboard.putData("Auto choices", m_chooser);
 
         drivebase.current_state = DriveBaseStates.XBOX;
@@ -139,13 +138,8 @@ public class Robot extends TimedRobot {
         // SmartDashboard.putNumber("LimelightArea", area);
         // SmartDashboard.putNumber("LimelightTagID", tagID);
 
-        SmartDashboard.putNumber("Flywheel R", flywheels.right_flywheel_spark.getOutputCurrent());
-        SmartDashboard.putNumber("Flywheel L", flywheels.left_flywheel_spark.getOutputCurrent());
-
-        SmartDashboard.putNumber("Transfer", note_transfer.transfer_spark.getOutputCurrent());
-        SmartDashboard.putNumber("Intake", intake.intakeRollers.intakeRollerMotor.getOutputCurrent());
-
-        SmartDashboard.putNumber("Total Current", pdh.getTotalCurrent());
+        SmartDashboard.putString("Angle", shooter_angle.get_state().toString());
+        SmartDashboard.putBoolean("Note Sensor", intake.noteDetectors.get());
     }
 
     /**
@@ -175,6 +169,9 @@ public class Robot extends TimedRobot {
         if (!shooter_angle.home_found) {
             shooter_angle.request_state(RequestStates.FIND_HOME);
         }
+        flywheels.request_state(FlywheelSubmodule.RequestStates.STOP);
+        note_transfer.request_state(NoteTransferModule.RequestStates.STOP);
+
     }
 
     /**
@@ -185,6 +182,26 @@ public class Robot extends TimedRobot {
         switch (m_autoSelected) {
             case kCustomAuto:
                 // Put custom auto code here
+                if (shooter_angle.get_state() == ShooterAngleModule.ModuleStates.HOMING){
+                    
+                } else if (shooter_angle.get_state() == ShooterAngleModule.ModuleStates.HOME) {
+                    autoTimer.reset();
+                    autoTimer.start();
+                    shooter_angle.request_state(ShooterAngleModule.RequestStates.AMP_ANGLE);
+                    flywheels.request_state(FlywheelSubmodule.RequestStates.SPIN_UP_SPEAKER);
+                }
+
+                if (autoTimer.hasElapsed(5)) {
+                    note_transfer.request_state(NoteTransferModule.RequestStates.SHOOT);
+                    intake.request_state(IntakeModule.RequestStates.SHOOT);
+                }
+
+                SmartDashboard.putNumber("Auto Time", autoTimer.get());
+
+                shooter_angle.update();
+                flywheels.update();
+                note_transfer.update();
+                intake.update();
                 break;
             case kDefaultAuto:
             default:
@@ -205,17 +222,27 @@ public class Robot extends TimedRobot {
         if (!shooter_angle.home_found) {
             shooter_angle.request_state(RequestStates.FIND_HOME);
         }
+
+        flywheels.request_state(FlywheelSubmodule.RequestStates.STOP);
+        shooter_angle.request_state(ShooterAngleModule.RequestStates.HOME);
+        note_transfer.request_state(NoteTransferModule.RequestStates.STOP);
+        intake.request_state(IntakeModule.RequestStates.CANCEL_INTAKE);
     }
 
     /** This function is called periodically during operator control. */
     @Override
     public void teleopPeriodic() {
 
+        /* Gyro Rest */
+        if (driver_controller.getStartButtonPressed()) {
+            drivebase.gyro.reset();
+        }
+
         /* Home All */
         /* 2 on Driver Controller or 21 on Farm sim 
          * 1 on Driver Controller released - ie no long pressing shoot
         */
-        if (driver_controller.getYButton() || farmSim2.getRawButtonPressed(5) || 
+        if (driver_controller.getYButton() || farmSim1.getRawButtonPressed(11) || 
             (driver_controller.getRightTriggerAxis() < 0.5 && last_shoot_trigger >= 0.5)) {
             /* Remove limit on drivebase speed */
             drivebase.set_max_drive_speed(1);
@@ -234,9 +261,14 @@ public class Robot extends TimedRobot {
             shooter_angle.request_state(ShooterAngleModule.RequestStates.HOME);
         }
 
+        /* Eject */
+        if (farmSim1.getRawButtonPressed(16)) {
+            intake.request_state(IntakeModule.RequestStates.EMPTY_INTAKE);
+        }
+
         /* Amp Prepare */
-        /* 17 on Farm sim */
-        if (farmSim2.getRawButtonPressed(1)) {
+        /* 4 on Farm sim */
+        if (farmSim1.getRawButtonPressed(4)) {
             /* Limit drivebase speed while flywheels are running */
             drivebase.set_max_drive_speed(0.5);
             note_transfer.request_state(NoteTransferModule.RequestStates.STOP);
@@ -245,8 +277,8 @@ public class Robot extends TimedRobot {
         }
 
         /* Speaker Prepare */
-        /* 18 on Farm sim */
-        if (farmSim2.getRawButtonPressed(2)) {
+        /* 10 on Farm sim */
+        if (farmSim1.getRawButtonPressed(10) || driver_controller.getLeftBumperPressed()) {
             /* Limit drivebase speed while flywheels are running */
             drivebase.set_max_drive_speed(0.3);
             note_transfer.request_state(NoteTransferModule.RequestStates.STOP);
@@ -255,9 +287,9 @@ public class Robot extends TimedRobot {
             shooter_angle.request_state(ShooterAngleModule.RequestStates.AMP_ANGLE);
         }
 
-        /* Speaker Prepare */
-        /* 20 on Farm sim */
-        if (farmSim2.getRawButtonPressed(4)) {
+        /* Speaker Far Prepare */
+        /* 5 on Farm sim */
+        if (farmSim1.getRawButtonPressed(5)) {
             /* Limit drivebase speed while flywheels are running */
             drivebase.set_max_drive_speed(0.3);
             note_transfer.request_state(NoteTransferModule.RequestStates.STOP);

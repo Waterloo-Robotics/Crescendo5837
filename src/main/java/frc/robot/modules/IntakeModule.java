@@ -40,7 +40,7 @@ public class IntakeModule {
     public IntakePositionModule intakePosition;
     public IntakeRollersModule intakeRollers;
 
-    DigitalInput noteDetectors = new DigitalInput(0);
+    public DigitalInput noteDetectors = new DigitalInput(0);
 
     /* Class Constructor */
     public IntakeModule(int intakeMotorID, PneumaticHub pneumaticHub) {
